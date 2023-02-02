@@ -2,10 +2,9 @@ import { useEffect, useState } from "react";
 import Posts from "./Posts";
 
 type FeedType = {
+  image?: string;
   name: string;
-  text: string;
-  time: string;
-  image: string;
+  report: string;
   _id: string;
 };
 
@@ -32,7 +31,7 @@ const Feed = (): JSX.Element => {
         console.log(err.message);
         setError(true);
       });
-  }, []);
+  }, [feed]);
 
   console.log("first render", feed.length);
 

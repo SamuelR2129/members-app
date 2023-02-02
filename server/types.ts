@@ -1,7 +1,8 @@
 export type PostType = {
-  _id?: number;
+  _id?: string;
   name: string;
-  time: string;
-  text: string;
+  hours: string;
+  costs: string;
+  report: string;
   image?: string;
 };

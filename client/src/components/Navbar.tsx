@@ -9,7 +9,6 @@ const Navbar = () => {
   const authLinks = (
     <>
       <ul>
-        <li>Hello Elliott and Peirce </li>
         <li>
           <a href="#!">
             <i className="fas fa-sign-out-alt"></i>
@@ -36,7 +35,9 @@ const Navbar = () => {
     <>
       <ul className="flex">
         <li>
-          <button onClick={() => setShowForm(true)}>Make a Post</button>
+          <button onClick={() => setShowForm(!showForm)}>
+            {showForm ? "Hide Post Form" : "Make a Post"}
+          </button>
         </li>
         <li>
           <a href="#!">

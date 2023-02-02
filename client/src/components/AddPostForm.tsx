@@ -5,7 +5,7 @@ const formReducer = (state: any, event: any) => {
     return {
       name: "",
       hours: 0,
-      costs: "",
+      costs: 0,
       report: "",
     };
   }
@@ -19,13 +19,34 @@ const AddPostForm = () => {
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useReducer(formReducer, {});
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSubmitting(true);
-    setFormData({
-      reset: true,
-    });
-    alert("You have submitted the form.");
+    try {
+      const formPostResponse = await fetch(
+        `${process.env.REACT_APP_SERVER_URL}/api/member/posts/makepost`,
+        {
+          method: "POST",
+          mode: "cors",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formData),
+        }
+      );
+      await formPostResponse.json();
+      setFormData({
+        reset: true,
+      });
+      setSubmitting(false);
+
+      alert("You have submitted the form.");
+    } catch (err) {
+      console.log("There has been an error submitting your post", err);
+      alert("There has been an error submitting your post");
+      setFormData({
+        reset: true,
+      });
+      setSubmitting(false);
+    }
   };
 
   const handleChange = (event: any) => {

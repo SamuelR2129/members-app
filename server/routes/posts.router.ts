@@ -35,13 +35,16 @@ postsRouter.get("/:_id", async (req: Request, res: Response) => {
 
 // make post
 
-postsRouter.post("/", async (req: Request, res: Response) => {
+postsRouter.post("/makepost", async (req: Request, res: Response) => {
   try {
     const newPost: PostType = req.body;
+    console.log("serverpost", newPost);
 
     const createPostResult = await posts.create(newPost);
 
-    return res.status(201).send("Successfully created your post");
+    return res
+      .status(201)
+      .send({ status: true, result: "Post made successfully" });
   } catch (err: any) {
     return res.status(500).send(err.message);
   }
@@ -54,7 +57,9 @@ postsRouter.put("/:_id", async (req: Request, res: Response) => {
   try {
     await posts.findByIdAndUpdate(req.params._id, postUpdate);
 
-    res.status(201).send("Successfully updated your post");
+    res
+      .status(201)
+      .send({ status: true, result: "Successfully updated your post" });
   } catch (err: any) {
     res.status(500).send(err.message);
   }
@@ -66,7 +71,9 @@ postsRouter.delete("/:_id", async (req: Request, res: Response) => {
   try {
     await posts.findByIdAndDelete({ _id: req.params._id });
 
-    res.sendStatus(204).send("Successfully deleted your post");
+    res
+      .sendStatus(204)
+      .send({ status: true, result: "Successfully deleted your post" });
   } catch (err: any) {
     res.status(500).send(err.message);
   }
