@@ -1,4 +1,18 @@
-import { FormEvent, useReducer, useState } from "react";
+import { ChangeEvent, FormEvent, useReducer, useState } from "react";
+
+type FormDataType = {
+  name: string;
+  hours: string;
+  costs: string;
+  report: string;
+  image?: File[];
+  reset?: boolean;
+};
+
+type AddPostResponseData = {
+  status: boolean;
+  result: string;
+};
 
 const formReducer = (state: any, event: any) => {
   if (event.reset) {
@@ -7,6 +21,7 @@ const formReducer = (state: any, event: any) => {
       hours: 0,
       costs: 0,
       report: "",
+      images: [],
     };
   }
   return {
@@ -22,23 +37,41 @@ const AddPostForm = () => {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSubmitting(true);
+
     try {
+      const data = new FormData();
+
+      data.set("name", formData.name);
+      data.set("hours", formData.hours);
+      data.set("costs", formData.costs);
+      data.set("report", formData.report);
+      if (formData.images) {
+        data.set("images", formData.images[0]);
+      }
+
       const formPostResponse = await fetch(
         `${process.env.REACT_APP_SERVER_URL}/api/member/posts/makepost`,
         {
           method: "POST",
           mode: "cors",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
+          body: data,
         }
       );
-      await formPostResponse.json();
+
+      const responseData: AddPostResponseData = await formPostResponse.json();
+
       setFormData({
         reset: true,
       });
-      setSubmitting(false);
 
-      alert("You have submitted the form.");
+      setSubmitting(false);
+      if (!responseData.status) {
+        alert(responseData.result);
+        return;
+      }
+
+      alert(responseData.result);
+      return;
     } catch (err) {
       console.log("There has been an error submitting your post", err);
       alert("There has been an error submitting your post");
@@ -49,10 +82,24 @@ const AddPostForm = () => {
     }
   };
 
-  const handleChange = (event: any) => {
+  const handleChange = (
+    event:
+      | ChangeEvent<HTMLSelectElement>
+      | ChangeEvent<HTMLInputElement>
+      | ChangeEvent<HTMLTextAreaElement>
+  ) => {
     setFormData({
       name: event.target.name,
       value: event.target.value,
+    });
+  };
+
+  const onImageChange = (event: ChangeEvent<HTMLInputElement>) => {
+    if (!event.target.files) return;
+    console.log(event.target.files);
+    setFormData({
+      name: event.target.name,
+      value: event.target.files,
     });
   };
 
@@ -109,6 +156,15 @@ const AddPostForm = () => {
               rows={5}
               cols={60}
               required
+            />
+          </label>
+          <label>
+            <p>Add Image:</p>
+            <input
+              type="file"
+              name="images"
+              onChange={onImageChange}
+              multiple
             />
           </label>
         </fieldset>

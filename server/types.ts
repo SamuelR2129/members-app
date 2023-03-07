@@ -4,5 +4,5 @@ export type PostType = {
   hours: string;
   costs: string;
   report: string;
-  image?: string;
+  images?: FileList;
 };

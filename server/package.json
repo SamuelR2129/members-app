@@ -26,7 +26,9 @@
     "helmet": "^6.0.1",
     "install": "^0.13.0",
     "mongodb": "^4.13.0",
-    "mongoose": "^6.8.2"
+    "mongoose": "^6.8.2",
+    "multer": "^1.4.5-lts.1",
+    "multer-gridfs-storage": "^5.0.2"
   },
   "devDependencies": {
     "@types/cors": "^2.8.13",

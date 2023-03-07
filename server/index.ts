@@ -1,5 +1,5 @@
 import * as dotenv from "dotenv";
-import express from "express";
+import express, { Request } from "express";
 import cors from "cors";
 import helmet from "helmet";
 import { postsRouter } from "./routes/posts.router";
@@ -27,6 +27,7 @@ app.use(helmet());
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+app.use("/uploads", express.static(__dirname + "/uploads"));
 app.use("/api/member/posts", postsRouter);
 
 //Error Handlers

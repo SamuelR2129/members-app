@@ -1,6 +1,9 @@
 import express, { Request, Response } from "express";
 import { PostType } from "../types";
 import posts from "../interfaces/post.interface";
+const multer = require("multer");
+const uploadMiddleware = multer({ dest: "uploads/" });
+const fs = require("fs");
 
 export const postsRouter = express.Router();
 
@@ -35,20 +38,38 @@ postsRouter.get("/:_id", async (req: Request, res: Response) => {
 
 // make post
 
-postsRouter.post("/makepost", async (req: Request, res: Response) => {
-  try {
-    const newPost: PostType = req.body;
-    console.log("serverpost", newPost);
+postsRouter.post(
+  "/makepost",
+  uploadMiddleware.single("images"),
+  async (req: Request, res: Response) => {
+    try {
+      let newPath = "";
+      if (req.file) {
+        const { originalname, path } = req.file;
+        const parts = originalname.split(".");
+        const ext = parts[parts.length - 1];
+        newPath = path + "." + ext;
+        fs.renameSync(path, newPath);
+      }
 
-    const createPostResult = await posts.create(newPost);
+      const { name, hours, costs, report } = req.body;
 
-    return res
-      .status(201)
-      .send({ status: true, result: "Post made successfully" });
-  } catch (err: any) {
-    return res.status(500).send(err.message);
+      await posts.create({
+        name: name,
+        hours: hours,
+        costs: costs,
+        report: report,
+        images: newPath,
+      });
+
+      return res
+        .status(201)
+        .send({ status: true, result: "Post made successfully" });
+    } catch (err: any) {
+      return res.status(500).send("Post was not successfull, Please try again");
+    }
   }
-});
+);
 
 // update post
 

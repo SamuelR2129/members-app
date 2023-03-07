@@ -28,12 +28,10 @@ const Feed = (): JSX.Element => {
         setLoading(false);
       })
       .catch((err) => {
-        console.log(err.message);
+        console.error(err.message);
         setError(true);
       });
   }, [feed]);
-
-  console.log("first render", feed.length);
 
   return (
     <>
