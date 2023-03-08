@@ -1,4 +1,4 @@
-import { ChangeEvent, FormEvent, useReducer, useState } from "react";
+import { ChangeEvent, FormEvent, useReducer, useRef, useState } from "react";
 
 type FormDataType = {
   name: string;
@@ -21,7 +21,7 @@ const formReducer = (state: any, event: any) => {
       hours: 0,
       costs: 0,
       report: "",
-      images: [],
+      images: "",
     };
   }
   return {
@@ -33,7 +33,9 @@ const formReducer = (state: any, event: any) => {
 const AddPostForm = () => {
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useReducer(formReducer, {});
+  const [inputKey, setInputKey] = useState(Date.now());
 
+  console.log(formData);
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSubmitting(true);
@@ -63,6 +65,8 @@ const AddPostForm = () => {
       setFormData({
         reset: true,
       });
+
+      setInputKey(Date.now());
 
       setSubmitting(false);
       if (!responseData.status) {
@@ -96,7 +100,6 @@ const AddPostForm = () => {
 
   const onImageChange = (event: ChangeEvent<HTMLInputElement>) => {
     if (!event.target.files) return;
-    console.log(event.target.files);
     setFormData({
       name: event.target.name,
       value: event.target.files,
@@ -163,7 +166,9 @@ const AddPostForm = () => {
             <input
               type="file"
               name="images"
+              className="imageInput"
               onChange={onImageChange}
+              key={inputKey}
               multiple
             />
           </label>
