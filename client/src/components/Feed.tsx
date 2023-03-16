@@ -14,7 +14,7 @@ const Feed = (): JSX.Element => {
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    fetch("/api/member/posts/")
+    fetch("/api/member/posts/feed")
       .then((response) => {
         if (!response.ok) {
           throw new Error(

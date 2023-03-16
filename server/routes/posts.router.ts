@@ -1,15 +1,15 @@
 import express, { Request, Response } from "express";
 import { PostType } from "../types";
 import posts from "../interfaces/post.interface";
+import { uploadFileS3 } from "../s3";
 const multer = require("multer");
 const uploadMiddleware = multer({ dest: "uploads/" });
-const fs = require("fs");
 
 export const postsRouter = express.Router();
 
 // get posts
 
-postsRouter.get("/", async (req: Request, res: Response) => {
+postsRouter.get("/feed", async (req: Request, res: Response) => {
   try {
     const allPosts: PostType[] = await posts.find();
     res.status(200).send(allPosts);
@@ -45,21 +45,25 @@ postsRouter.post(
     try {
       let newPath = "";
       if (req.file) {
+        /*
         const { originalname, path } = req.file;
         const parts = originalname.split(".");
         const ext = parts[parts.length - 1];
         newPath = path + "." + ext;
-        fs.renameSync(path, newPath);
+        fs.renameSync(path, newPath); */
+
+        const result = await uploadFileS3(req.file);
+        console.log("s3 result", result);
       }
 
-      const { name, hours, costs, report } = req.body;
+      const { name, hours, costs, report }: PostType = req.body;
 
       await posts.create({
         name: name,
         hours: hours,
         costs: costs,
         report: report,
-        images: newPath,
+        images: req.file?.path,
       });
 
       return res

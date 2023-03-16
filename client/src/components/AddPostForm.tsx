@@ -1,13 +1,4 @@
-import { ChangeEvent, FormEvent, useReducer, useRef, useState } from "react";
-
-type FormDataType = {
-  name: string;
-  hours: string;
-  costs: string;
-  report: string;
-  image?: File[];
-  reset?: boolean;
-};
+import { ChangeEvent, FormEvent, useReducer, useState } from "react";
 
 type AddPostResponseData = {
   status: boolean;
