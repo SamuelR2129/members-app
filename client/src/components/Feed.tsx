@@ -31,7 +31,7 @@ const Feed = (): JSX.Element => {
         console.error(err.message);
         setError(true);
       });
-  }, [feed]);
+  }, []);
 
   return (
     <>

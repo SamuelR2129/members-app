@@ -1,9 +1,10 @@
 import express, { Request, Response } from "express";
 import { PostType } from "../types";
 import posts from "../interfaces/post.interface";
-import { uploadFileS3 } from "../s3";
-const multer = require("multer");
-const uploadMiddleware = multer({ dest: "uploads/" });
+import { getFilesFromS3, uploadFileS3 } from "../aws/s3";
+import multer from "multer";
+const multerStorage = multer.memoryStorage();
+const uploadMiddleware = multer({ storage: multerStorage });
 
 export const postsRouter = express.Router();
 
@@ -11,15 +12,23 @@ export const postsRouter = express.Router();
 
 postsRouter.get("/feed", async (req: Request, res: Response) => {
   try {
-    const allPosts: PostType[] = await posts.find();
+    const postsFromDB: PostType[] = await posts.find();
+    for (const post of postsFromDB) {
+      if (post.imageName) {
+        const postImageUrl = await getFilesFromS3(post.imageName);
+        post.imageUrl = postImageUrl;
+      }
+    }
+    console.log("ALLPOSTS", allPosts);
     res.status(200).send(allPosts);
   } catch (err: any) {
-    res.status(500).send(err.message);
+    console.error(`System error geting feed - ${err}`);
+    res.status(500).send(`System error getting feed`);
   }
 });
 
 // get post
-
+/*
 postsRouter.get("/:_id", async (req: Request, res: Response) => {
   const _id: number = parseInt(req.params._id, 10);
 
@@ -35,7 +44,7 @@ postsRouter.get("/:_id", async (req: Request, res: Response) => {
     res.status(500).send(err.message);
   }
 });
-
+*/
 // make post
 
 postsRouter.post(
@@ -43,17 +52,9 @@ postsRouter.post(
   uploadMiddleware.single("images"),
   async (req: Request, res: Response) => {
     try {
-      let newPath = "";
-      if (req.file) {
-        /*
-        const { originalname, path } = req.file;
-        const parts = originalname.split(".");
-        const ext = parts[parts.length - 1];
-        newPath = path + "." + ext;
-        fs.renameSync(path, newPath); */
-
-        const result = await uploadFileS3(req.file);
-        console.log("s3 result", result);
+      const randomImageName = req.file ? Date() : undefined;
+      if (req.file && randomImageName) {
+        await uploadFileS3(req.file, randomImageName);
       }
 
       const { name, hours, costs, report }: PostType = req.body;
@@ -63,13 +64,14 @@ postsRouter.post(
         hours: hours,
         costs: costs,
         report: report,
-        images: req.file?.path,
+        imageName: randomImageName,
       });
 
       return res
         .status(201)
         .send({ status: true, result: "Post made successfully" });
     } catch (err: any) {
+      console.error(`System error making post - ${err}`);
       return res.status(500).send("Post was not successfull, Please try again");
     }
   }

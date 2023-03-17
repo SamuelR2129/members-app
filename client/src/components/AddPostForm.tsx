@@ -26,7 +26,6 @@ const AddPostForm = () => {
   const [formData, setFormData] = useReducer(formReducer, {});
   const [inputKey, setInputKey] = useState(Date.now());
 
-  console.log(formData);
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSubmitting(true);
@@ -68,7 +67,7 @@ const AddPostForm = () => {
       alert(responseData.result);
       return;
     } catch (err) {
-      console.log("There has been an error submitting your post", err);
+      console.error("There has been an error submitting your post", err);
       alert("There has been an error submitting your post");
       setFormData({
         reset: true,

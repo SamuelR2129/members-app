@@ -11,7 +11,7 @@ dotenv.config();
 
 //App Variables
 if (!process.env.PORT) {
-  console.log("PORT variable is null or undefined");
+  console.error("PORT variable is null or undefined");
   process.exit(1);
 }
 
