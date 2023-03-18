@@ -18,7 +18,7 @@ const Feed = (): JSX.Element => {
       .then((response) => {
         if (!response.ok) {
           throw new Error(
-            `This is an HTTP error: The status is ${response.status}`
+            `This is an HTTP error loading the feed: The status is ${response.status}`
           );
         }
         return response.json();
@@ -37,14 +37,20 @@ const Feed = (): JSX.Element => {
     <>
       <h3>What is happening in this space:</h3>
       <div>
-        {loading ? (
-          <div>Searching for posts...</div>
+        {!error ? (
+          <>
+            {loading ? (
+              <div>Searching for posts...</div>
+            ) : (
+              feed.map((post) => (
+                <div key={post._id}>
+                  <Posts post={post} />
+                </div>
+              ))
+            )}
+          </>
         ) : (
-          feed.map((post) => (
-            <div key={post._id}>
-              <Posts post={post} />
-            </div>
-          ))
+          <div>There has been an error loading the feed, please refresh</div>
         )}
       </div>
     </>

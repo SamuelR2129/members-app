@@ -1,8 +1,10 @@
 import express, { Request, Response } from "express";
-import { PostType } from "../types";
+import { PostFromDB, PostType } from "../types";
 import posts from "../interfaces/post.interface";
 import { getFilesFromS3, uploadFileS3 } from "../aws/s3";
 import multer from "multer";
+import makePostWithImage from "../utilities/makePostWithImage";
+import mapPost from "../utilities/mapPost";
 const multerStorage = multer.memoryStorage();
 const uploadMiddleware = multer({ storage: multerStorage });
 
@@ -12,17 +14,17 @@ export const postsRouter = express.Router();
 
 postsRouter.get("/feed", async (req: Request, res: Response) => {
   try {
-    const postsFromDB: PostType[] = await posts.find();
-    for (const post of postsFromDB) {
-      if (post.imageName) {
-        const postImageUrl = await getFilesFromS3(post.imageName);
-        post.imageUrl = postImageUrl;
-      }
+    const postsFromDB: PostFromDB[] = await posts.find();
+
+    if (!postsFromDB) {
+      throw new Error("Getting posts from DB is undefined/null");
     }
-    console.log("ALLPOSTS", allPosts);
-    res.status(200).send(allPosts);
+
+    const mappedPosts = await mapPost(postsFromDB);
+
+    res.status(200).send(mappedPosts);
   } catch (err: any) {
-    console.error(`System error geting feed - ${err}`);
+    console.error(`System error getting feed - ${err}`);
     res.status(500).send(`System error getting feed`);
   }
 });

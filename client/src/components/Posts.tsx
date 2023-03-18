@@ -1,9 +1,10 @@
 type PostType = {
   post: {
-    image?: string;
+    _id: string;
     name: string;
     report: string;
-    _id: string;
+    imageUrl?: string;
+    imageName?: string;
   };
 };
 
@@ -12,6 +13,9 @@ const Posts = ({ post }: PostType) => {
     <div>
       <div>{post.name}</div>
       <div>{post.report}</div>
+      {post.imageUrl && (
+        <img alt="Feed" src={post.imageUrl} id={post.imageName} />
+      )}
     </div>
   );
 };
