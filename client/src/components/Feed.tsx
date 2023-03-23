@@ -1,15 +1,11 @@
 import { useEffect, useState } from "react";
 import Posts from "./Posts";
-
-type FeedType = {
-  image?: string;
-  name: string;
-  report: string;
-  _id: string;
-};
+import { feedState } from "../atom/feedAtom";
+import { useRecoilState } from "recoil";
 
 const Feed = (): JSX.Element => {
-  const [feed, setFeed] = useState<FeedType[]>([]);
+  const [feed, setFeed] = useRecoilState(feedState);
+  //const [feed, setFeed] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
@@ -31,6 +27,7 @@ const Feed = (): JSX.Element => {
         console.error(err.message);
         setError(true);
       });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

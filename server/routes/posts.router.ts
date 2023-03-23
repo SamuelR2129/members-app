@@ -5,6 +5,7 @@ import { getFilesFromS3, uploadFileS3 } from "../aws/s3";
 import multer from "multer";
 import makePostWithImage from "../utilities/makePostWithImage";
 import mapPost from "../utilities/mapPost";
+import removeWasteDataFromNewPost from "../utilities/removeWasteDataFromNewPost";
 const multerStorage = multer.memoryStorage();
 const uploadMiddleware = multer({ storage: multerStorage });
 
@@ -61,7 +62,7 @@ postsRouter.post(
 
       const { name, hours, costs, report }: PostType = req.body;
 
-      await posts.create({
+      const newPost = await posts.create({
         name: name,
         hours: hours,
         costs: costs,
@@ -69,12 +70,27 @@ postsRouter.post(
         imageName: randomImageName,
       });
 
-      return res
-        .status(201)
-        .send({ status: true, result: "Post made successfully" });
+      if (!newPost) {
+        throw new Error(
+          "Mongoose did not return a new post after it was created"
+        );
+      }
+
+      const trimmedPostData = removeWasteDataFromNewPost(newPost);
+
+      const mappedPosts = await mapPost([trimmedPostData]);
+
+      return res.status(201).send({
+        valid: true,
+        result: "Post made successfully",
+        data: mappedPosts,
+      });
     } catch (err: any) {
       console.error(`System error making post - ${err}`);
-      return res.status(500).send("Post was not successfull, Please try again");
+      return res.status(500).send({
+        valid: false,
+        result: "Post was not successfull, Please try again",
+      });
     }
   }
 );

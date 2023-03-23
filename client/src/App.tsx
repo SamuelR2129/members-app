@@ -1,11 +1,12 @@
 import React from "react";
 import Home from "./components/Home";
+import { RecoilRoot } from "recoil";
 
 function App() {
   return (
-    <div>
+    <RecoilRoot>
       <Home />
-    </div>
+    </RecoilRoot>
   );
 }
 

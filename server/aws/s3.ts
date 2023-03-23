@@ -47,7 +47,6 @@ export const uploadFileS3 = async (
         `There was an issue uploading image to s3 - code: ${uploadFileResult?.$metadata.httpStatusCode}, result:${uploadFileResult} `
       );
     }
-
     return uploadFileResult;
   } catch (err) {
     throw err;

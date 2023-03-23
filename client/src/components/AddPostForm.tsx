@@ -1,8 +1,12 @@
 import { ChangeEvent, FormEvent, useReducer, useState } from "react";
+import { useRecoilState } from "recoil";
+import { feedState } from "../atom/feedAtom";
+import { PostState } from "../types";
 
 type AddPostResponseData = {
-  status: boolean;
+  valid: boolean;
   result: string;
+  data: [PostState];
 };
 
 const formReducer = (state: any, event: any) => {
@@ -25,6 +29,7 @@ const AddPostForm = () => {
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useReducer(formReducer, {});
   const [inputKey, setInputKey] = useState(Date.now());
+  const [feed, setFeed] = useRecoilState(feedState);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -52,26 +57,34 @@ const AddPostForm = () => {
 
       const responseData: AddPostResponseData = await formPostResponse.json();
 
+      if (!responseData.valid || !responseData) {
+        throw new Error(
+          `Response from formPost is not valid or undefined - ${responseData}`
+        );
+      }
+
+      const newFeedPost = responseData.data[0];
+
+      setFeed([...feed, newFeedPost]);
+
+      // resets the text based inputs
       setFormData({
         reset: true,
       });
-
+      //resets the image input
       setInputKey(Date.now());
 
       setSubmitting(false);
-      if (!responseData.status) {
-        alert(responseData.result);
-        return;
-      }
 
-      alert(responseData.result);
+      alert("Post was successful!");
       return;
     } catch (err) {
-      console.error("There has been an error submitting your post", err);
+      console.error("System Error Submitting Post: ", err);
       alert("There has been an error submitting your post");
       setFormData({
         reset: true,
       });
+      setInputKey(Date.now());
       setSubmitting(false);
     }
   };
