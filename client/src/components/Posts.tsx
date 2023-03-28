@@ -15,7 +15,12 @@ const Posts = ({ post }: PostType) => {
       <div>{post.name}</div>
       <div>{post.report}</div>
       {post.imageUrl && (
-        <img alt="Feed" src={post.imageUrl} id={post.imageName} />
+        <img
+          alt="Feed"
+          src={post.imageUrl}
+          id={post.imageName}
+          style={{ width: "300px", height: "300px" }}
+        />
       )}
     </div>
   );

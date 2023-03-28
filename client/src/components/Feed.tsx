@@ -5,34 +5,39 @@ import { useRecoilState } from "recoil";
 
 const Feed = (): JSX.Element => {
   const [feed, setFeed] = useRecoilState(feedState);
-  //const [feed, setFeed] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
+  const fetchFeed = async () => {
+    const response = await fetch("/api/member/posts/feed");
+    if (!response.ok) {
+      setError(true);
+      throw new Error(
+        `This is an HTTP error loading the feed: The status is ${response.status}`
+      );
+    }
+    const feedData = await response.json();
+    setFeed(feedData);
+    setLoading(false);
+  };
+
   useEffect(() => {
-    fetch("/api/member/posts/feed")
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(
-            `This is an HTTP error loading the feed: The status is ${response.status}`
-          );
-        }
-        return response.json();
-      })
-      .then((feedData) => {
-        setFeed(feedData);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error(err.message);
-        setError(true);
-      });
+    fetchFeed();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
     <>
-      <h3>What is happening in this space:</h3>
+      <h3>What is happening on site:</h3>
+      <div>
+        <h4>Filter sites:</h4>
+        <select value={""}>
+          <option value="All Sites">All Sites</option>
+          <option value="32 James St">32 James St</option>
+          <option value="Nib">Nib</option>
+          <option value="7 Rose St">7 Rose St</option>
+        </select>
+      </div>
       <div>
         {!error ? (
           <>
