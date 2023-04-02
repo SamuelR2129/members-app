@@ -3,6 +3,7 @@ type PostType = {
     _id: string;
     name: string;
     report: string;
+    buildSite: string;
     createdAt: string;
     imageUrl?: string;
     imageName?: string;
@@ -13,6 +14,7 @@ const Posts = ({ post }: PostType) => {
   return (
     <div>
       <div>{post.name}</div>
+      <div>{post.buildSite}</div>
       <div>{post.report}</div>
       {post.imageUrl && (
         <img

@@ -60,13 +60,14 @@ postsRouter.post(
         await uploadFileS3(req.file, randomImageName);
       }
 
-      const { name, hours, costs, report }: PostType = req.body;
+      const { name, hours, costs, report, buildSite }: PostType = req.body;
 
       const newPost = await posts.create({
         name: name,
         hours: hours,
         costs: costs,
         report: report,
+        buildSite: buildSite,
         imageName: randomImageName,
       });
 

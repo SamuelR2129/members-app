@@ -16,6 +16,7 @@ const formReducer = (state: any, event: any) => {
       hours: 0,
       costs: 0,
       report: "",
+      buildSite: "",
       images: "",
     };
   }
@@ -42,6 +43,7 @@ const AddPostForm = () => {
       data.set("hours", formData.hours);
       data.set("costs", formData.costs);
       data.set("report", formData.report);
+      data.set("buildSite", formData.buildSite);
       if (formData.images) {
         data.set("images", formData.images[0]);
       }
@@ -65,7 +67,7 @@ const AddPostForm = () => {
 
       const newFeedPost = responseData.data[0];
 
-      setFeed([...feed, newFeedPost]);
+      setFeed([newFeedPost, ...feed]);
 
       // resets the text based inputs
       setFormData({
@@ -127,6 +129,20 @@ const AddPostForm = () => {
               <option value="Elliott">Elliott</option>
               <option value="Pierce">Pierce</option>
               <option value="Sam">Sam</option>
+            </select>
+          </label>
+          <label>
+            <p>Choose a site:</p>
+            <select
+              name="buildSite"
+              onChange={handleChange}
+              value={formData.buildSite || ""}
+              required
+            >
+              <option value="">--Please choose an option--</option>
+              <option value="7 Rose Street">7 Rose Street</option>
+              <option value="NIB">NIB</option>
+              <option value="11 Beach Street">11 Beach Street</option>
             </select>
           </label>
           <label>

@@ -10,7 +10,7 @@ const makePostWithImage = async (
   post: PostFromDB
 ): Promise<PostWithImageUrl> => {
   try {
-    const { _id, name, report, imageName, createdAt } =
+    const { _id, name, report, buildSite, imageName, createdAt } =
       post as PostWithImageName;
     const imageUrl = await getFilesFromS3(imageName);
 
@@ -22,6 +22,7 @@ const makePostWithImage = async (
       _id: _id,
       name: name,
       report: report,
+      buildSite: buildSite,
       createdAt: createdAt,
       imageName: imageName,
       imageUrl: imageUrl,

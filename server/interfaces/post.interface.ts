@@ -6,6 +6,7 @@ const PostSchema = new Mongoose.Schema(
     hours: String,
     costs: String,
     report: String,
+    buildSite: String,
     imageName: String,
   },
   {
