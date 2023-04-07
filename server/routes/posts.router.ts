@@ -6,19 +6,46 @@ import multer from "multer";
 import makePostWithImage from "../utilities/makePostWithImage";
 import mapPost from "../utilities/mapPost";
 import removeWasteDataFromNewPost from "../utilities/removeWasteDataFromNewPost";
+import { isPostsFromDBValid } from "../utilities/typeGaurds/isPostsFromDBValid";
 const multerStorage = multer.memoryStorage();
 const uploadMiddleware = multer({ storage: multerStorage });
+
+type PageOptions = {
+  page: number;
+  limit: number;
+};
 
 export const postsRouter = express.Router();
 
 // get posts
 
 postsRouter.get("/feed", async (req: Request, res: Response) => {
-  try {
-    const postsFromDB: PostFromDB[] = await posts.find();
+  let pageOptions: PageOptions;
+  if (
+    typeof req.query.page === "string" &&
+    typeof req.query.limit === "string"
+  ) {
+    pageOptions = {
+      page: parseInt(req.query.page, 10) || 0,
+      limit: parseInt(req.query.limit, 10) || 10,
+    };
+  } else {
+    throw new Error("Missing page or limit in feed query");
+  }
 
-    if (!postsFromDB) {
-      throw new Error("Getting posts from DB is undefined/null");
+  try {
+    const postsFromDB = await posts
+      .find()
+      .skip(pageOptions.page * pageOptions.limit)
+      .limit(pageOptions.limit)
+      .exec();
+
+    if (postsFromDB.length === 0) {
+      return res.status(204).send([]);
+    }
+
+    if (!isPostsFromDBValid(postsFromDB)) {
+      throw new Error("Getting posts from DB there is a undefined/null value");
     }
 
     const mappedPosts = await mapPost(postsFromDB);

@@ -8,32 +8,78 @@ const Feed = (): JSX.Element => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [site, setSite] = useState("");
+  const [isFetching, setIsFetching] = useState(false);
+  const [pagination, setPagination] = useState(0);
+  const [noMorePosts, setNoMorePosts] = useState(false);
+
+  const handleSiteSelect = (event: ChangeEvent<HTMLSelectElement>) => {
+    setSite(event?.target.value);
+  };
+
+  const filteredSite = feed.filter((post) => {
+    return post.buildSite.toLowerCase().includes(site.toLowerCase());
+  });
 
   const fetchFeed = async () => {
-    const response = await fetch("/api/member/posts/feed");
+    const response = await fetch(
+      `/api/member/posts/feed?page=${pagination}&limit=2`
+    );
+    console.log(response);
     if (!response.ok) {
       setError(true);
       throw new Error(
         `This is an HTTP error loading the feed: The status is ${response.status}`
       );
     }
+
+    if (response.status === 204) {
+      setNoMorePosts(true);
+      setLoading(false);
+    }
+
     const feedData = await response.json();
-    setFeed(feedData);
+
+    if (feed.length === 0) {
+      setFeed(feedData);
+    } else {
+      setFeed([...feed, ...feedData]);
+    }
+
     setLoading(false);
   };
 
+  const handleScroll = () => {
+    if (
+      window.innerHeight + document.documentElement.scrollTop !==
+      document.documentElement.offsetHeight
+    ) {
+      return;
+    }
+    setIsFetching(true);
+  };
+
+  const fetchMoreListItems = () => {
+    fetchFeed();
+    setPagination(pagination + 1);
+    setIsFetching(false);
+  };
+
+  useEffect(() => {
+    if (!isFetching) return;
+    fetchMoreListItems();
+  }, [isFetching]);
+
   useEffect(() => {
     fetchFeed();
+    setPagination(pagination + 1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleSiteSelect = (event: ChangeEvent<HTMLSelectElement>) => {
-    setSite(event?.target.value);
-  };
-
-  const filteredSite = feed.filter((post) =>
-    post.buildSite.toLowerCase().includes(site.toLowerCase())
-  );
+  useEffect(() => {
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <>
@@ -57,6 +103,7 @@ const Feed = (): JSX.Element => {
             ) : (
               <div>No posts to view</div>
             )}
+            <div>{noMorePosts && <div>No more posts to load </div>}</div>
           </>
         ) : (
           <div>There has been an error loading the feed, please refresh</div>
