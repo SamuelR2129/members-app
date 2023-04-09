@@ -1,12 +1,12 @@
-import Feed from "./Feed";
-import Navbar from "./Navbar";
+import Feed from "../components/Feed";
+import Navbar from "../components/Navbar";
 
 const Home = () => {
   return (
-    <>
+    <div className="container overflow-x-hidden">
       <article className="">
         <header>
-          <h1>Eac-Rowan Builds</h1>
+          <h1 className="">Eac-Rowan Builds</h1>
         </header>
       </article>
 
@@ -14,7 +14,7 @@ const Home = () => {
         <Navbar />
         <Feed />
       </section>
-    </>
+    </div>
   );
 };
 

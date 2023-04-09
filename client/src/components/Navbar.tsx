@@ -1,57 +1,54 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
 import AddPostForm from "./AddPostForm";
+import tw from "tailwind-styled-components";
+import { NavLink as Link } from "react-router-dom";
+
+const NavUl = tw.ul`
+  flex 
+  flex-wrap
+  list-none 
+  font-bold
+  p-0
+`;
+
+const NavIl = tw.li`
+  p-2
+`;
 
 const Navbar = () => {
-  const isAuthenticated = false;
+  const isManager = false;
   const [showForm, setShowForm] = useState(false);
 
-  const authLinks = (
-    <>
-      <ul>
-        <li>
-          <a href="#!">
-            <i className="fas fa-sign-out-alt"></i>
-            <span className="hide-sm">Tables</span>
-          </a>
-        </li>
-        <li>
-          <a href="#!">
-            <i className="fas fa-sign-out-alt"></i>
-            <span className="hide-sm">Contractors</span>
-          </a>
-        </li>
-        <li>
-          <a href="#!">
-            <i className="fas fa-sign-out-alt"></i>
-            <span className="hide-sm">Logout</span>
-          </a>
-        </li>
-      </ul>
-    </>
-  );
+  const managerLinks = <ul></ul>;
 
   const tradieLinks = (
-    <>
-      <ul className="flex">
-        <li>
-          <button onClick={() => setShowForm(!showForm)}>
-            {showForm ? "Hide Post Form" : "Make a Post"}
-          </button>
-        </li>
-        <li>
-          <a href="#!">
-            <i className="fas fa-sign-out-alt"></i>
-            <span className="hide-sm">Logout</span>
-          </a>
-        </li>
-      </ul>
-    </>
+    <NavUl>
+      <NavIl>
+        <button onClick={() => setShowForm(!showForm)}>
+          {showForm ? "Hide Post Form" : "Make a Post"}
+        </button>
+      </NavIl>
+      <NavIl>
+        <Link to="/" className="no-underline">
+          Logout
+        </Link>
+      </NavIl>
+      <NavIl>
+        <Link to="/tables" className="no-underline">
+          Tables
+        </Link>
+      </NavIl>
+      <NavIl>
+        <Link to="/contractors" className="no-underline">
+          Contractors
+        </Link>
+      </NavIl>
+    </NavUl>
   );
 
   return (
     <div className="">
-      <ul>{isAuthenticated ? authLinks : tradieLinks}</ul>
+      {isManager ? managerLinks : tradieLinks}
       {showForm && <AddPostForm />}
     </div>
   );

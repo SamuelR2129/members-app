@@ -178,6 +178,7 @@ const AddPostForm = () => {
               rows={5}
               cols={60}
               required
+              className="w-[97%]"
             />
           </label>
           <label>
