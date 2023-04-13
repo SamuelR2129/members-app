@@ -1,3 +1,8 @@
+import { useRecoilState } from "recoil";
+import tw from "tailwind-styled-components";
+import { feedState } from "../atom/feedAtom";
+import { PostState } from "../types";
+
 type PostType = {
   post: {
     _id: string;
@@ -10,9 +15,63 @@ type PostType = {
   };
 };
 
+const PostWrapper = tw.div`
+  m-2
+  p-2
+  border-2
+  border-solid
+  border-gray-200
+`;
+
+const DeleteButton = tw.button`
+  p-1 
+  border-1 
+  border-solid 
+  bg-red-100
+  border-red-500
+  hover:bg-red-300
+  active:bg-red-500
+  active:ring 
+  active:ring-red-300
+  cursor-pointer
+`;
+
+const removeStatePostById = (
+  feed: PostState[],
+  _idToRemove: string
+): PostState[] => {
+  const newArray = feed.filter((post) => post._id !== _idToRemove);
+  return newArray;
+};
+
 const Posts = ({ post }: PostType) => {
+  const [feed, setFeed] = useRecoilState(feedState);
+
+  const deletePost = async (_id: string) => {
+    document.querySelector("#post-wrapper")?.classList.toggle("animate-pulse");
+    const response = await fetch(`/api/member/posts/delete/${_id}`, {
+      method: "DELETE",
+    });
+
+    if (!response.ok) {
+      document
+        .querySelector("#post-wrapper")
+        ?.classList.toggle("animate-pulse");
+
+      alert("There was an issue removing the post, try again!");
+
+      throw new Error(
+        `This is an HTTP error deleting your post: The status is ${response.status}`
+      );
+    }
+
+    const newFeed = removeStatePostById(feed, _id);
+    setFeed(newFeed);
+    alert("Post was deleted!");
+  };
+
   return (
-    <div>
+    <PostWrapper id="post-wrapper">
       <div>{post.name}</div>
       <div>{post.buildSite}</div>
       <div>{post.report}</div>
@@ -24,7 +83,11 @@ const Posts = ({ post }: PostType) => {
           style={{ width: "300px", height: "300px" }}
         />
       )}
-    </div>
+      <div className="flex justify-between">
+        <div>Edit</div>
+        <DeleteButton onClick={() => deletePost(post._id)}>Delete</DeleteButton>
+      </div>
+    </PostWrapper>
   );
 };
 

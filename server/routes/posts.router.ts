@@ -140,12 +140,12 @@ postsRouter.put("/:_id", async (req: Request, res: Response) => {
 
 // delete post
 
-postsRouter.delete("/:_id", async (req: Request, res: Response) => {
+postsRouter.delete("/delete/:_id", async (req: Request, res: Response) => {
   try {
     await posts.findByIdAndDelete({ _id: req.params._id });
 
     res
-      .sendStatus(204)
+      .status(204)
       .send({ status: true, result: "Successfully deleted your post" });
   } catch (err: any) {
     res.status(500).send(err.message);

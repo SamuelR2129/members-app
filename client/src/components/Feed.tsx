@@ -24,7 +24,7 @@ const Feed = (): JSX.Element => {
     const response = await fetch(
       `/api/member/posts/feed?page=${pagination}&limit=2`
     );
-    console.log(response);
+
     if (!response.ok) {
       setError(true);
       throw new Error(
