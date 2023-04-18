@@ -4,9 +4,9 @@ import {
   S3Client,
   PutObjectCommand,
   GetObjectCommand,
+  DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { Logger } from "mongodb";
 
 const bucketName = process.env.AWS_BUCKET_NAME;
 const region = process.env.AWS_BUCKET_REGION || "";
@@ -59,19 +59,41 @@ export const getFilesFromS3 = async (imageName: string) => {
     return;
   }
   try {
-    const getObjectParams = {
+    const command = new GetObjectCommand({
       Key: imageName,
       Bucket: bucketName,
-    };
+    });
 
-    const command = new GetObjectCommand(getObjectParams);
-    const url = await getSignedUrl(s3, command, { expiresIn: 3600 });
+    const fileUrl = await getSignedUrl(s3, command, { expiresIn: 3600 });
 
-    if (!url) {
+    if (!fileUrl) {
       console.error("Image url path from s3 returned null/undefined");
       return;
     }
-    return url;
+    return fileUrl;
+  } catch (err) {
+    throw err;
+  }
+};
+
+export const deleteFileFromS3 = async (imageName: string) => {
+  try {
+    const command = new DeleteObjectCommand({
+      Key: imageName,
+      Bucket: bucketName,
+    });
+
+    const response = await s3.send(command);
+
+    if (!response || response.$metadata.httpStatusCode != 204) {
+      throw new Error(
+        `There was an issue deleting image at s3 - code: ${response?.$metadata.httpStatusCode}, result:${response} `
+      );
+    }
+
+    console.log(response);
+
+    return response;
   } catch (err) {
     throw err;
   }

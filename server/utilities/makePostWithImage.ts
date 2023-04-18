@@ -1,11 +1,5 @@
-import { error } from "console";
 import { getFilesFromS3 } from "../aws/s3";
-import {
-  PostType,
-  PostWithImageUrl,
-  PostWithImageName,
-  PostFromDB,
-} from "../types";
+import { PostWithImageUrl, PostWithImageName, PostFromDB } from "../types";
 
 const makePostWithImage = async (
   post: PostFromDB

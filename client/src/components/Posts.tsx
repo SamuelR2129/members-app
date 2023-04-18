@@ -2,6 +2,7 @@ import { useRecoilState } from "recoil";
 import tw from "tailwind-styled-components";
 import { feedState } from "../atom/feedAtom";
 import { PostState } from "../types";
+import { pulsePostCardToggle } from "./utilities";
 
 type PostType = {
   post: {
@@ -47,16 +48,19 @@ const removeStatePostById = (
 const Posts = ({ post }: PostType) => {
   const [feed, setFeed] = useRecoilState(feedState);
 
-  const deletePost = async (_id: string) => {
-    document.querySelector("#post-wrapper")?.classList.toggle("animate-pulse");
-    const response = await fetch(`/api/member/posts/delete/${_id}`, {
-      method: "DELETE",
+  const deletePost = async (post: PostState) => {
+    pulsePostCardToggle();
+
+    const deleteBodyData = { imageName: post.imageName || "" };
+
+    const response = await fetch(`/api/member/posts/delete/${post._id}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(deleteBodyData),
     });
 
     if (!response.ok) {
-      document
-        .querySelector("#post-wrapper")
-        ?.classList.toggle("animate-pulse");
+      pulsePostCardToggle();
 
       alert("There was an issue removing the post, try again!");
 
@@ -65,8 +69,9 @@ const Posts = ({ post }: PostType) => {
       );
     }
 
-    const newFeed = removeStatePostById(feed, _id);
+    const newFeed = removeStatePostById(feed, post._id);
     setFeed(newFeed);
+    pulsePostCardToggle();
     alert("Post was deleted!");
   };
 
@@ -85,7 +90,7 @@ const Posts = ({ post }: PostType) => {
       )}
       <div className="flex justify-between">
         <div>Edit</div>
-        <DeleteButton onClick={() => deletePost(post._id)}>Delete</DeleteButton>
+        <DeleteButton onClick={() => deletePost(post)}>Delete</DeleteButton>
       </div>
     </PostWrapper>
   );

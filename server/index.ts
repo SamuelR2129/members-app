@@ -22,11 +22,10 @@ const PORT: number = parseInt(process.env.PORT as string, 10);
 const app = express();
 
 // Middleware - App Configuration
-
+app.use(express.json());
 app.use(helmet());
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
 app.use("/uploads", express.static(__dirname + "/uploads"));
 app.use("/api/member/posts", postsRouter);
 

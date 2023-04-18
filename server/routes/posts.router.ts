@@ -1,9 +1,8 @@
 import express, { Request, Response } from "express";
-import { PostFromDB, PostType } from "../types";
+import { PostType } from "../types";
 import posts from "../interfaces/post.interface";
-import { getFilesFromS3, uploadFileS3 } from "../aws/s3";
+import { deleteFileFromS3, uploadFileS3 } from "../aws/s3";
 import multer from "multer";
-import makePostWithImage from "../utilities/makePostWithImage";
 import mapPost from "../utilities/mapPost";
 import removeWasteDataFromNewPost from "../utilities/removeWasteDataFromNewPost";
 import { isPostsFromDBValid } from "../utilities/typeGaurds/isPostsFromDBValid";
@@ -140,8 +139,14 @@ postsRouter.put("/:_id", async (req: Request, res: Response) => {
 
 // delete post
 
-postsRouter.delete("/delete/:_id", async (req: Request, res: Response) => {
+postsRouter.post("/delete/:_id", async (req: Request, res: Response) => {
+  const imageName = req.body.imageName as string;
+
   try {
+    if (imageName.length > 0) {
+      deleteFileFromS3(imageName);
+    }
+
     await posts.findByIdAndDelete({ _id: req.params._id });
 
     res
