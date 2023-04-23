@@ -37,6 +37,19 @@ const DeleteButton = tw.button`
   cursor-pointer
 `;
 
+const EditButton = tw.button`
+  p-1 
+  border-1 
+  border-solid 
+  bg-blue-100
+  border-blue-500
+  hover:bg-blue-300
+  active:bg-blue-500
+  active:ring 
+  active:ring-blue-300
+  cursor-pointer
+`;
+
 const removeStatePostById = (
   feed: PostState[],
   _idToRemove: string
@@ -75,6 +88,8 @@ const Posts = ({ post }: PostType) => {
     alert("Post was deleted!");
   };
 
+  const editPost = (post: PostState) => {};
+
   return (
     <PostWrapper id="post-wrapper">
       <div>{post.name}</div>
@@ -88,8 +103,8 @@ const Posts = ({ post }: PostType) => {
           style={{ width: "300px", height: "300px" }}
         />
       )}
-      <div className="flex justify-between">
-        <div>Edit</div>
+      <div className="flex justify-between mt-4">
+        <EditButton onClick={() => editPost(post)}>Edit</EditButton>
         <DeleteButton onClick={() => deletePost(post)}>Delete</DeleteButton>
       </div>
     </PostWrapper>

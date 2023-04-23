@@ -1,5 +1,5 @@
 import express, { Request, Response } from "express";
-import { PostType } from "../types";
+import { PostFromDB, PostType } from "../types";
 import posts from "../interfaces/post.interface";
 import { deleteFileFromS3, uploadFileS3 } from "../aws/s3";
 import multer from "multer";
@@ -124,10 +124,15 @@ postsRouter.post(
 
 // update post
 
-postsRouter.put("/:_id", async (req: Request, res: Response) => {
-  const postUpdate: PostType = req.body;
+postsRouter.post("/update/:_id", async (req: Request, res: Response) => {
+  const { report, buildSite }: PostFromDB = req.body;
+  console.log(report, buildSite);
+
   try {
-    await posts.findByIdAndUpdate(req.params._id, postUpdate);
+    await posts.findByIdAndUpdate(req.params._id, {
+      report,
+      buildSite,
+    });
 
     res
       .status(201)
