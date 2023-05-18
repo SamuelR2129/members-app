@@ -1,13 +1,7 @@
 import { ChangeEvent, FormEvent, useReducer, useState } from "react";
 import { useRecoilState } from "recoil";
 import { feedState } from "../atom/feedAtom";
-import { PostState } from "../types";
-
-type AddPostResponseData = {
-  valid: boolean;
-  result: string;
-  data: [PostState];
-};
+import { AddPostResponseData, PostState } from "../types/posts";
 
 const formReducer = (state: any, event: any) => {
   if (event.reset) {
@@ -59,7 +53,7 @@ const AddPostForm = () => {
 
       const responseData: AddPostResponseData = await formPostResponse.json();
 
-      if (!responseData.valid || !responseData) {
+      if (!responseData.data) {
         throw new Error(
           `Response from formPost is not valid or undefined - ${responseData}`
         );

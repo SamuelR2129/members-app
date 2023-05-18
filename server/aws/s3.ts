@@ -91,8 +91,6 @@ export const deleteFileFromS3 = async (imageName: string) => {
       );
     }
 
-    console.log(response);
-
     return response;
   } catch (err) {
     throw err;

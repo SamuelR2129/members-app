@@ -125,18 +125,27 @@ postsRouter.post(
 // update post
 
 postsRouter.post("/update/:_id", async (req: Request, res: Response) => {
-  const { report, buildSite }: PostFromDB = req.body;
-  console.log(report, buildSite);
+  const { report, buildSite, hours, costs }: PostType = req.body;
 
   try {
-    await posts.findByIdAndUpdate(req.params._id, {
+    const updatedPost = await posts.findByIdAndUpdate(req.params._id, {
       report,
       buildSite,
+      hours,
+      costs,
     });
+
+    if (!updatedPost) {
+      throw new Error("Unable to find post to update in mongodb");
+    }
 
     res
       .status(201)
-      .send({ status: true, result: "Successfully updated your post" });
+      .send({
+        status: true,
+        result: "Successfully updated your post",
+        data: updatedPost,
+      });
   } catch (err: any) {
     res.status(500).send(err.message);
   }

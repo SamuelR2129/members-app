@@ -12,8 +12,6 @@ const Feed = (): JSX.Element => {
   const [pagination, setPagination] = useState(0);
   const [noMorePosts, setNoMorePosts] = useState(false);
 
-  console.log(feed);
-
   const handleSiteSelect = (event: ChangeEvent<HTMLSelectElement>) => {
     setSite(event?.target.value);
   };

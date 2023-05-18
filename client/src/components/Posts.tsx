@@ -1,8 +1,10 @@
 import { useRecoilState } from "recoil";
 import tw from "tailwind-styled-components";
 import { feedState } from "../atom/feedAtom";
-import { PostState } from "../types";
+import { PostState } from "../types/posts";
 import { pulsePostCardToggle } from "./utilities";
+import { useState } from "react";
+import { EditFormModal } from "./EditFormModal";
 
 type PostType = {
   post: {
@@ -14,6 +16,12 @@ type PostType = {
     imageUrl?: string;
     imageName?: string;
   };
+};
+
+export type EditFormValues = {
+  _id: string;
+  report: string;
+  buildSite: string;
 };
 
 const PostWrapper = tw.div`
@@ -60,6 +68,12 @@ const removeStatePostById = (
 
 const Posts = ({ post }: PostType) => {
   const [feed, setFeed] = useRecoilState(feedState);
+  const [showModal, setShowModal] = useState(false);
+  const [formValues, setFormValues] = useState<EditFormValues>({
+    _id: post._id,
+    report: "",
+    buildSite: "",
+  });
 
   const deletePost = async (post: PostState) => {
     pulsePostCardToggle();
@@ -88,26 +102,43 @@ const Posts = ({ post }: PostType) => {
     alert("Post was deleted!");
   };
 
-  const editPost = (post: PostState) => {};
+  const handleEditClick = (post: PostState) => {
+    setShowModal(true);
+    setFormValues(post);
+  };
+
+  const handleModalClose = () => {
+    setShowModal(false);
+  };
+
+  const editModalProps = {
+    handleModalClose,
+    formValues,
+    setFormValues,
+    setShowModal,
+  };
 
   return (
-    <PostWrapper id="post-wrapper">
-      <div>{post.name}</div>
-      <div>{post.buildSite}</div>
-      <div>{post.report}</div>
-      {post.imageUrl && (
-        <img
-          alt="Feed"
-          src={post.imageUrl}
-          id={post.imageName}
-          style={{ width: "300px", height: "300px" }}
-        />
-      )}
-      <div className="flex justify-between mt-4">
-        <EditButton onClick={() => editPost(post)}>Edit</EditButton>
-        <DeleteButton onClick={() => deletePost(post)}>Delete</DeleteButton>
-      </div>
-    </PostWrapper>
+    <>
+      {showModal && <EditFormModal {...editModalProps} />}
+      <PostWrapper id="post-wrapper">
+        <div>{post.name}</div>
+        <div>{post.buildSite}</div>
+        <div>{post.report}</div>
+        {post.imageUrl && (
+          <img
+            alt="Feed"
+            src={post.imageUrl}
+            id={post.imageName}
+            style={{ width: "300px", height: "300px" }}
+          />
+        )}
+        <div className="flex justify-between mt-4">
+          <EditButton onClick={() => handleEditClick(post)}>Edit</EditButton>
+          <DeleteButton onClick={() => deletePost(post)}>Delete</DeleteButton>
+        </div>
+      </PostWrapper>
+    </>
   );
 };
 

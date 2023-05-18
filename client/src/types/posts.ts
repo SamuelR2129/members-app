@@ -7,3 +7,9 @@ export type PostState = {
   imageUrl?: string;
   imageName?: string;
 };
+
+export type AddPostResponseData = {
+  status: number;
+  result: string;
+  data: [PostState];
+};
