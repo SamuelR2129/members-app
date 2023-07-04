@@ -30,7 +30,7 @@ const Navbar = () => {
       </NavIl>
       <NavIl>
         <Link to="/" className="no-underline">
-          Logout
+          Feed
         </Link>
       </NavIl>
       <NavIl>
@@ -41,6 +41,11 @@ const Navbar = () => {
       <NavIl>
         <Link to="/contractors" className="no-underline">
           Contractors
+        </Link>
+      </NavIl>
+      <NavIl>
+        <Link to="/" className="no-underline">
+          Logout
         </Link>
       </NavIl>
     </NavUl>

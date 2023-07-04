@@ -1,7 +1,6 @@
 import Feed from "../components/Feed";
-import Navbar from "../components/Navbar";
 
-const Home = () => {
+const MainFeed = () => {
   return (
     <div className="container overflow-x-hidden">
       <article className="">
@@ -11,11 +10,10 @@ const Home = () => {
       </article>
 
       <section className="">
-        <Navbar />
         <Feed />
       </section>
     </div>
   );
 };
 
-export default Home;
+export default MainFeed;
