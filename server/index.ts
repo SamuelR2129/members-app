@@ -3,6 +3,7 @@ import express, { Request } from "express";
 import cors from "cors";
 import helmet from "helmet";
 import { postsRouter } from "./routes/posts.router";
+import { tableRouter } from "./routes/tableData.router";
 import { errorHandler } from "./middleware/error.middleware";
 import { notFoundHandler } from "./middleware/not-found.middleware";
 import connectDB from "./common/database";
@@ -27,7 +28,8 @@ app.use(helmet());
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 app.use("/uploads", express.static(__dirname + "/uploads"));
-app.use("/api/member/posts", postsRouter);
+app.use("/posts", postsRouter);
+app.use("/tableData", tableRouter);
 
 //Error Handlers
 

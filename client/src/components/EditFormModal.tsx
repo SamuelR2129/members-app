@@ -28,7 +28,7 @@ export const EditFormModal = ({
     data.set("buildSite", formValues.buildSite);
 
     const formPostResponse = await fetch(
-      `${process.env.REACT_APP_SERVER_URL}/api/member/posts/update/${formValues._id}`,
+      `${process.env.REACT_APP_SERVER_URL}/posts/update/${formValues._id}`,
       {
         method: "POST",
         mode: "cors",

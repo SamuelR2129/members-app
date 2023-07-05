@@ -80,7 +80,7 @@ const Posts = ({ post }: PostType) => {
 
     const deleteBodyData = { imageName: post.imageName || "" };
 
-    const response = await fetch(`/api/member/posts/delete/${post._id}`, {
+    const response = await fetch(`/posts/delete/${post._id}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(deleteBodyData),

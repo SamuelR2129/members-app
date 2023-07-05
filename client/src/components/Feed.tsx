@@ -21,9 +21,7 @@ const Feed = (): JSX.Element => {
   });
 
   const fetchFeed = async () => {
-    const response = await fetch(
-      `/api/member/posts/feed?page=${pagination}&limit=2`
-    );
+    const response = await fetch(`/posts/feed?page=${pagination}&limit=2`);
 
     if (!response.ok) {
       setError(true);

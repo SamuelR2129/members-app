@@ -43,7 +43,7 @@ const AddPostForm = () => {
       }
 
       const formPostResponse = await fetch(
-        `${process.env.REACT_APP_SERVER_URL}/api/member/posts/makepost`,
+        `${process.env.REACT_APP_SERVER_URL}/posts/makepost`,
         {
           method: "POST",
           mode: "cors",
