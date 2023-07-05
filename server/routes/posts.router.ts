@@ -32,28 +32,27 @@ postsRouter.get("/feed", async (req: Request, res: Response) => {
     throw new Error("Missing page or limit in feed query");
   }
 
-  try {
-    const postsFromDB = await posts
-      .find()
-      .skip(pageOptions.page * pageOptions.limit)
-      .limit(pageOptions.limit)
-      .exec();
+  const postsFromDB = await posts
+    .find()
+    .skip(pageOptions.page * pageOptions.limit)
+    .limit(pageOptions.limit)
+    .exec();
 
-    if (postsFromDB.length === 0) {
-      return res.status(204).send([]);
-    }
-
-    if (!isPostsFromDBValid(postsFromDB)) {
-      throw new Error("Getting posts from DB there is a undefined/null value");
-    }
-
-    const mappedPosts = await mapPost(postsFromDB);
-
-    res.status(200).send(mappedPosts);
-  } catch (err: any) {
-    console.error(`System error getting feed - ${err}`);
-    res.status(500).send(`System error getting feed`);
+  if (postsFromDB.length === 0) {
+    return res.status(204).send([]);
   }
+
+  if (!isPostsFromDBValid(postsFromDB)) {
+    throw new Error("Getting posts from DB there is a undefined/null value");
+  }
+
+  const mappedPosts = await mapPost(postsFromDB);
+
+  if (mappedPosts) {
+    return res.status(200).send(mappedPosts);
+  }
+
+  return res.status(500).send(`System error getting feed`);
 });
 
 // get post
@@ -80,45 +79,45 @@ postsRouter.post(
   "/makepost",
   uploadMiddleware.single("images"),
   async (req: Request, res: Response) => {
-    try {
-      const randomImageName = req.file ? Date() : undefined;
-      if (req.file && randomImageName) {
-        await uploadFileS3(req.file, randomImageName);
-      }
+    const randomImageName = req.file ? Date() : undefined;
+    if (req.file && randomImageName) {
+      await uploadFileS3(req.file, randomImageName);
+    }
 
-      const { name, hours, costs, report, buildSite }: PostType = req.body;
+    const { name, hours, costs, report, buildSite }: PostType = req.body;
 
-      const newPost = await posts.create({
-        name: name,
-        hours: hours,
-        costs: costs,
-        report: report,
-        buildSite: buildSite,
-        imageName: randomImageName,
+    const newPost = await posts.create({
+      name: name,
+      hours: hours,
+      costs: costs,
+      report: report,
+      buildSite: buildSite,
+      imageName: randomImageName,
+    });
+
+    if (!newPost) {
+      return res.status(500).send({
+        valid: false,
+        result: "Mongoose did not create a new post",
       });
+    }
 
-      if (!newPost) {
-        throw new Error(
-          "Mongoose did not return a new post after it was created"
-        );
-      }
+    const trimmedPostData = removeWasteDataFromNewPost(newPost);
 
-      const trimmedPostData = removeWasteDataFromNewPost(newPost);
+    const mappedPosts = await mapPost([trimmedPostData]);
 
-      const mappedPosts = await mapPost([trimmedPostData]);
-
+    if (mappedPosts) {
       return res.status(201).send({
         valid: true,
         result: "Post made successfully",
         data: mappedPosts,
       });
-    } catch (err: any) {
-      console.error(`System error making post - ${err}`);
-      return res.status(500).send({
-        valid: false,
-        result: "Post was not successfull, Please try again",
-      });
     }
+
+    return res.status(500).send({
+      valid: false,
+      result: "Post was not successfull, Please try again",
+    });
   }
 );
 
@@ -127,28 +126,22 @@ postsRouter.post(
 postsRouter.post("/update/:_id", async (req: Request, res: Response) => {
   const { report, buildSite, hours, costs }: PostType = req.body;
 
-  try {
-    const updatedPost = await posts.findByIdAndUpdate(req.params._id, {
-      report,
-      buildSite,
-      hours,
-      costs,
-    });
+  const updatedPost = await posts.findByIdAndUpdate(req.params._id, {
+    report,
+    buildSite,
+    hours,
+    costs,
+  });
 
-    if (!updatedPost) {
-      throw new Error("Unable to find post to update in mongodb");
-    }
-
-    res
-      .status(201)
-      .send({
-        status: true,
-        result: "Successfully updated your post",
-        data: updatedPost,
-      });
-  } catch (err: any) {
-    res.status(500).send(err.message);
+  if (!updatedPost) {
+    res.status(500).send("Unable to find post to update in mongodb");
   }
+
+  res.status(201).send({
+    status: true,
+    result: "Successfully updated your post",
+    data: updatedPost,
+  });
 });
 
 // delete post
