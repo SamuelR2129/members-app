@@ -3,12 +3,22 @@ import posts from "../interfaces/post.interface";
 
 export const tableRouter = express.Router();
 
-type tableDataFromDB = {
+export type tableDataFromDB = {
   _id: string;
   name: string;
   createdAt: Date;
   costs: string;
   hours: string;
+};
+
+export type DataMappedToDay = {
+  monday: tableDataFromDB[];
+  tuesday: tableDataFromDB[];
+  wednesday: tableDataFromDB[];
+  thursday: tableDataFromDB[];
+  friday: tableDataFromDB[];
+  saturday: tableDataFromDB[];
+  sunday: tableDataFromDB[];
 };
 
 const isTableDataValid = (
@@ -25,18 +35,88 @@ const isTableDataValid = (
   );
 };
 
+export const subtractDaysFromWeek = (currentDay: Date) => {
+  const daysTillEndOfWeek = 6 - currentDay.getDay();
+  const previousDays = currentDay;
+  previousDays.setDate(previousDays.getDate() - daysTillEndOfWeek);
+  return previousDays;
+};
+
+export const sortDataByDay = (data: tableDataFromDB[]): DataMappedToDay => {
+  //Mon: 1, Tues: 2, Wed: 3, Thur: 4, Fri: 5, Sat: 6, Sun: 0
+  let dayGroups: DataMappedToDay = {
+    monday: [],
+    tuesday: [],
+    wednesday: [],
+    thursday: [],
+    friday: [],
+    saturday: [],
+    sunday: [],
+  };
+
+  for (const post of data) {
+    const postDay = post.createdAt.getDay();
+
+    switch (postDay) {
+      case 0:
+        dayGroups.sunday.push(post);
+        break;
+
+      case 1:
+        dayGroups.monday.push(post);
+        break;
+
+      case 2:
+        dayGroups.tuesday.push(post);
+        break;
+
+      case 3:
+        dayGroups.wednesday.push(post);
+        break;
+
+      case 4:
+        dayGroups.thursday.push(post);
+        break;
+
+      case 5:
+        dayGroups.friday.push(post);
+        break;
+
+      case 6:
+        dayGroups.saturday.push(post);
+        break;
+
+      default:
+        throw new Error(
+          "A number that is not a day was given to the tableData switch"
+        );
+    }
+  }
+
+  return dayGroups;
+};
+
 tableRouter.get("/fetchTableData", async (req, res) => {
+  const currentDay = new Date();
+  const pastDate = subtractDaysFromWeek(currentDay);
+
   // Retrieve all entries with a users name
   const data = await posts.find({
-    createdAt: { $gte: new Date("2020-12-17T03:24:00"), $lte: new Date() },
+    createdAt: { $gte: pastDate, $lte: currentDay },
   });
+
+  if (Array.isArray(data) && data.length === 0) {
+    res.status(200).send([]);
+  }
 
   if (!isTableDataValid(data)) {
     return res.status(500).send({
       valid: false,
-      result: "Mongoose did not create a new post",
+      result: "Table data is in a incorrect configuration",
     });
   }
 
-  res.status(200).send([{ name: "", hours: "String;", costs: "" }]);
+  sortDataByDay(data);
+
+  res.status(200).send(data);
 });
