@@ -21,6 +21,25 @@ export type DataMappedToDay = {
   sunday: tableDataFromDB[];
 };
 
+export type UserCosts = {
+  [key: string]: {
+    costs: number;
+  };
+};
+
+export type UserHours = {
+  [key: string]: {
+    hours: number;
+  };
+};
+
+export type UserCostsAndHours = {
+  [key: string]: {
+    hours: number;
+    costs: number;
+  };
+};
+
 const isTableDataValid = (
   unknownData: tableDataFromDB[] | unknown
 ): unknownData is tableDataFromDB[] => {
@@ -36,9 +55,12 @@ const isTableDataValid = (
 };
 
 export const subtractDaysFromWeek = (currentDay: Date) => {
-  const daysTillEndOfWeek = 6 - currentDay.getDay();
-  const previousDays = currentDay;
-  previousDays.setDate(previousDays.getDate() - daysTillEndOfWeek);
+  const currentDayOfWeek = currentDay.getDay();
+  const daysToSubtract = (currentDayOfWeek + 6) % 7; // Calculate the number of days to subtract inside a 7 day modulo
+
+  const previousDays = new Date(currentDay);
+  previousDays.setDate(currentDay.getDate() - daysToSubtract);
+
   return previousDays;
 };
 
@@ -96,27 +118,107 @@ export const sortDataByDay = (data: tableDataFromDB[]): DataMappedToDay => {
   return dayGroups;
 };
 
+export const addUpHowMuchUserSpent = (data: tableDataFromDB[]): UserCosts => {
+  const finalSums: UserCosts = {};
+
+  for (const post of data) {
+    let builtCosts: tableDataFromDB | { name: string; costs: string };
+
+    if (!post.name) {
+      throw new Error("No name on post when adding up costs");
+    }
+
+    if (post.costs === "" || !post.costs) {
+      builtCosts = {
+        name: post.name,
+        costs: "0",
+      };
+    } else {
+      builtCosts = post;
+    }
+
+    if (!finalSums[builtCosts.name]) {
+      finalSums[builtCosts.name] = { costs: +builtCosts.costs };
+    } else {
+      finalSums[builtCosts.name].costs =
+        +finalSums[builtCosts.name].costs + +builtCosts.costs;
+    }
+  }
+  return finalSums;
+};
+
+export const addUpHowManyHoursWorked = (data: tableDataFromDB[]): UserHours => {
+  const finalSums: UserHours = {};
+
+  for (const post of data) {
+    let builtHours: tableDataFromDB | { name: string; hours: string };
+
+    if (!post.name) {
+      throw new Error("No name on post when adding up hours worked");
+    }
+
+    if (post.hours === "" || !post.hours) {
+      builtHours = {
+        name: post.name,
+        hours: "0",
+      };
+    } else {
+      builtHours = post;
+    }
+
+    if (!finalSums[builtHours.name]) {
+      finalSums[builtHours.name] = { hours: +builtHours.hours };
+    } else {
+      finalSums[builtHours.name].hours =
+        +finalSums[builtHours.name].hours + +builtHours.hours;
+    }
+  }
+
+  return finalSums;
+};
+
+export const mapDayDataOverallHoursAndOverallCosts = (
+  dataByDay: DataMappedToDay,
+  overallCosts: UserCosts,
+  overallHours: UserHours
+) => {};
+
 tableRouter.get("/fetchTableData", async (req, res) => {
-  const currentDay = new Date();
-  const pastDate = subtractDaysFromWeek(currentDay);
+  try {
+    const currentDay = new Date();
+    const pastDate = subtractDaysFromWeek(currentDay);
 
-  // Retrieve all entries with a users name
-  const data = await posts.find({
-    createdAt: { $gte: pastDate, $lte: currentDay },
-  });
-
-  if (Array.isArray(data) && data.length === 0) {
-    res.status(200).send([]);
-  }
-
-  if (!isTableDataValid(data)) {
-    return res.status(500).send({
-      valid: false,
-      result: "Table data is in a incorrect configuration",
+    // Retrieve all entries with a users name
+    const postData = await posts.find({
+      createdAt: { $gte: pastDate, $lte: currentDay },
     });
+
+    if (Array.isArray(postData) && postData.length === 0) {
+      res.status(200).send([]);
+    }
+
+    if (!isTableDataValid(postData)) {
+      return res.status(500).send({
+        valid: false,
+        result: "Table data is in a incorrect configuration",
+      });
+    }
+
+    const dataByDay = sortDataByDay(postData);
+
+    const overallCosts = addUpHowMuchUserSpent(postData);
+
+    const overallHours = addUpHowManyHoursWorked(postData);
+
+    const DayDataHoursAndCosts = mapDayDataOverallHoursAndOverallCosts(
+      dataByDay,
+      overallCosts,
+      overallHours
+    );
+
+    res.status(200).send(postData);
+  } catch (err) {
+    console.log(err);
+    res.status(500).send(err);
   }
-
-  sortDataByDay(data);
-
-  res.status(200).send(data);
 });
