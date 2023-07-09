@@ -118,6 +118,43 @@ export const sortDataByDay = (data: tableDataFromDB[]): DataMappedToDay => {
   return dayGroups;
 };
 
+export const addValuesTogether = (postValues: tableDataFromDB[]) => {
+  const uniqueKeys = new Set<string>();
+
+  return postValues.map((element) => {
+    if (uniqueKeys.has(element.name)) {
+      return element; // Skip duplicates
+    }
+
+    const matchingElements = postValues.filter(
+      (el) => el.name === element.name
+    );
+
+    const totalCost = matchingElements.reduce((acc, el) => acc + +el.costs, 0);
+
+    const totalHours = matchingElements.reduce((acc, el) => acc + +el.hours, 0);
+
+    uniqueKeys.add(element.name);
+
+    return {
+      _id: element._id,
+      name: element.name,
+      createdAt: element.createdAt,
+      costs: totalCost,
+      hours: totalHours,
+    };
+  });
+};
+
+export const addDailyUserEntriesTogether = (data: DataMappedToDay) => {
+  return Object.fromEntries(
+    Object.entries(data).map(([day, postValues]) => [
+      day,
+      addValuesTogether(postValues),
+    ])
+  );
+};
+
 export const addUpHowMuchUserSpent = (data: tableDataFromDB[]): UserCosts => {
   const finalSums: UserCosts = {};
 
@@ -177,7 +214,7 @@ export const addUpHowManyHoursWorked = (data: tableDataFromDB[]): UserHours => {
   return finalSums;
 };
 
-export const mapDayDataOverallHoursAndOverallCosts = (
+export const mergeDayDataOverallHoursAndOverallCosts = (
   dataByDay: DataMappedToDay,
   overallCosts: UserCosts,
   overallHours: UserHours
@@ -206,11 +243,13 @@ tableRouter.get("/fetchTableData", async (req, res) => {
 
     const dataByDay = sortDataByDay(postData);
 
+    const weeklyData = addDailyUserEntriesTogether(dataByDay);
+
     const overallCosts = addUpHowMuchUserSpent(postData);
 
     const overallHours = addUpHowManyHoursWorked(postData);
 
-    const DayDataHoursAndCosts = mapDayDataOverallHoursAndOverallCosts(
+    const DayDataHoursAndCosts = mergeDayDataOverallHoursAndOverallCosts(
       dataByDay,
       overallCosts,
       overallHours

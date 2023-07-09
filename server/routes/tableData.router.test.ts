@@ -1,6 +1,7 @@
 import {
   addUpHowManyHoursWorked,
   addUpHowMuchUserSpent,
+  addValuesTogether,
   sortDataByDay,
   subtractDaysFromWeek,
   tableDataFromDB,
@@ -186,5 +187,65 @@ describe("addUpHowManyHoursWorked", () => {
 
     const result = addUpHowManyHoursWorked(data);
     expect(result).toEqual({ John: { hours: 3 }, Jane: { hours: 4 } });
+  });
+});
+
+describe("updateArrayWithCost", () => {
+  test("should update array elements with total cost and hours, removing duplicates", () => {
+    const inputArray = [
+      { _id: "1", name: "A", createdAt: new Date(), costs: "5", hours: "2" },
+      { _id: "2", name: "B", createdAt: new Date(), costs: "10", hours: "3" },
+      { _id: "3", name: "A", createdAt: new Date(), costs: "3", hours: "1" },
+      { _id: "4", name: "C", createdAt: new Date(), costs: "8", hours: "4" },
+    ] as tableDataFromDB[];
+
+    const expectedArray = [
+      {
+        _id: "1",
+        name: "A",
+        createdAt: expect.any(Date),
+        costs: "8",
+        hours: "3",
+      },
+      {
+        _id: "2",
+        name: "B",
+        createdAt: expect.any(Date),
+        costs: "10",
+        hours: "3",
+      },
+      {
+        _id: "4",
+        name: "C",
+        createdAt: expect.any(Date),
+        costs: "8",
+        hours: "4",
+      },
+    ];
+
+    const updatedArray = addValuesTogether(inputArray);
+
+    expect(updatedArray).toEqual(expectedArray);
+  });
+
+  test("should return an empty array for an empty input array", () => {
+    const inputArray = [] as tableDataFromDB[];
+
+    const updatedArray = addValuesTogether(inputArray);
+
+    expect(updatedArray).toEqual([]);
+  });
+
+  test("should not modify the original input array", () => {
+    const inputArray = [
+      { _id: "1", name: "A", createdAt: new Date(), costs: "5", hours: "2" },
+      { _id: "2", name: "B", createdAt: new Date(), costs: "10", hours: "3" },
+    ] as tableDataFromDB[];
+
+    const originalArray = [...inputArray];
+
+    addValuesTogether(inputArray);
+
+    expect(inputArray).toEqual(originalArray);
   });
 });
