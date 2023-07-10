@@ -1,4 +1,6 @@
 import {
+  DataMappedToDay,
+  addDailyUserEntriesTogether,
   addUpHowManyHoursWorked,
   addUpHowMuchUserSpent,
   addValuesTogether,
@@ -193,33 +195,57 @@ describe("addUpHowManyHoursWorked", () => {
 describe("updateArrayWithCost", () => {
   test("should update array elements with total cost and hours, removing duplicates", () => {
     const inputArray = [
-      { _id: "1", name: "A", createdAt: new Date(), costs: "5", hours: "2" },
-      { _id: "2", name: "B", createdAt: new Date(), costs: "10", hours: "3" },
-      { _id: "3", name: "A", createdAt: new Date(), costs: "3", hours: "1" },
-      { _id: "4", name: "C", createdAt: new Date(), costs: "8", hours: "4" },
+      {
+        _id: "1",
+        name: "A",
+        createdAt: new Date("2022-02-02"),
+        costs: "5",
+        hours: "2",
+      },
+      {
+        _id: "2",
+        name: "B",
+        createdAt: new Date("2022-02-02"),
+        costs: "10",
+        hours: "3",
+      },
+      {
+        _id: "3",
+        name: "A",
+        createdAt: new Date("2022-02-02"),
+        costs: "3",
+        hours: "1",
+      },
+      {
+        _id: "4",
+        name: "C",
+        createdAt: new Date("2022-02-02"),
+        costs: "8",
+        hours: "4",
+      },
     ] as tableDataFromDB[];
 
     const expectedArray = [
       {
         _id: "1",
         name: "A",
-        createdAt: expect.any(Date),
-        costs: "8",
-        hours: "3",
+        createdAt: new Date("2022-02-02"),
+        costs: 8,
+        hours: 3,
       },
       {
         _id: "2",
         name: "B",
-        createdAt: expect.any(Date),
-        costs: "10",
-        hours: "3",
+        createdAt: new Date("2022-02-02"),
+        costs: 10,
+        hours: 3,
       },
       {
         _id: "4",
         name: "C",
-        createdAt: expect.any(Date),
-        costs: "8",
-        hours: "4",
+        createdAt: new Date("2022-02-02"),
+        costs: 8,
+        hours: 4,
       },
     ];
 
@@ -248,4 +274,100 @@ describe("updateArrayWithCost", () => {
 
     expect(inputArray).toEqual(originalArray);
   });
+});
+
+describe("addDailyUserEntriesTogether", () => {
+  const mockData: DataMappedToDay = {
+    monday: [
+      {
+        _id: "1",
+        name: "Entry 1",
+        createdAt: new Date(),
+        costs: "10",
+        hours: "2",
+      },
+      {
+        _id: "2",
+        name: "Entry 2",
+        createdAt: new Date(),
+        costs: "15",
+        hours: "3",
+      },
+      {
+        _id: "1",
+        name: "Entry 1",
+        createdAt: new Date(),
+        costs: "20",
+        hours: "3",
+      },
+    ],
+    tuesday: [
+      {
+        _id: "3",
+        name: "Entry 3",
+        createdAt: new Date(),
+        costs: "20",
+        hours: "4",
+      },
+      {
+        _id: "4",
+        name: "Entry 4",
+        createdAt: new Date(),
+        costs: "25",
+        hours: "5",
+      },
+    ],
+    wednesday: [],
+    thursday: [],
+    friday: [],
+    saturday: [],
+    sunday: [],
+  };
+
+  const expectedOutput: DataMappedToDay = {
+    monday: [
+      {
+        _id: "1",
+        name: "Entry 1",
+        createdAt: expect.any(Date),
+        costs: 30,
+        hours: 5,
+      },
+      {
+        _id: "2",
+        name: "Entry 2",
+        createdAt: expect.any(Date),
+        costs: 15,
+        hours: 3,
+      },
+    ],
+    tuesday: [
+      {
+        _id: "3",
+        name: "Entry 3",
+        createdAt: expect.any(Date),
+        costs: 20,
+        hours: 4,
+      },
+      {
+        _id: "4",
+        name: "Entry 4",
+        createdAt: expect.any(Date),
+        costs: 25,
+        hours: 5,
+      },
+    ],
+    wednesday: [],
+    thursday: [],
+    friday: [],
+    saturday: [],
+    sunday: [],
+  };
+
+  it("should add the values of costs and hours for each unique name", () => {
+    const result = addDailyUserEntriesTogether(mockData);
+    expect(result).toEqual(expectedOutput);
+  });
+
+  // Add more tests if needed
 });

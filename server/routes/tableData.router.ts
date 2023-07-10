@@ -7,8 +7,21 @@ export type tableDataFromDB = {
   _id: string;
   name: string;
   createdAt: Date;
-  costs: string;
-  hours: string;
+  costs: string | number;
+  hours: string | number;
+};
+
+export type MappedWeeklyData = {
+  [k: string]: (
+    | {
+        _id: string;
+        name: string;
+        createdAt: Date;
+        costs: number;
+        hours: number;
+      }
+    | undefined
+  )[];
 };
 
 export type DataMappedToDay = {
@@ -121,32 +134,42 @@ export const sortDataByDay = (data: tableDataFromDB[]): DataMappedToDay => {
 export const addValuesTogether = (postValues: tableDataFromDB[]) => {
   const uniqueKeys = new Set<string>();
 
-  return postValues.map((element) => {
-    if (uniqueKeys.has(element.name)) {
-      return element; // Skip duplicates
-    }
+  return postValues
+    .map((element) => {
+      if (uniqueKeys.has(element.name)) {
+        return; // Skip duplicates
+      }
 
-    const matchingElements = postValues.filter(
-      (el) => el.name === element.name
-    );
+      const matchingElements = postValues.filter(
+        (el) => el.name === element.name
+      );
 
-    const totalCost = matchingElements.reduce((acc, el) => acc + +el.costs, 0);
+      const totalCost = matchingElements.reduce(
+        (acc, el) => acc + +el.costs,
+        0
+      );
 
-    const totalHours = matchingElements.reduce((acc, el) => acc + +el.hours, 0);
+      const totalHours = matchingElements.reduce(
+        (acc, el) => acc + +el.hours,
+        0
+      );
 
-    uniqueKeys.add(element.name);
+      uniqueKeys.add(element.name);
 
-    return {
-      _id: element._id,
-      name: element.name,
-      createdAt: element.createdAt,
-      costs: totalCost,
-      hours: totalHours,
-    };
-  });
+      return {
+        _id: element._id,
+        name: element.name,
+        createdAt: element.createdAt,
+        costs: totalCost,
+        hours: totalHours,
+      };
+    })
+    .filter((el) => el !== undefined);
 };
 
-export const addDailyUserEntriesTogether = (data: DataMappedToDay) => {
+export const addDailyUserEntriesTogether = (
+  data: DataMappedToDay
+): MappedWeeklyData => {
   return Object.fromEntries(
     Object.entries(data).map(([day, postValues]) => [
       day,
@@ -215,10 +238,14 @@ export const addUpHowManyHoursWorked = (data: tableDataFromDB[]): UserHours => {
 };
 
 export const mergeDayDataOverallHoursAndOverallCosts = (
-  dataByDay: DataMappedToDay,
+  weeklyData: MappedWeeklyData,
   overallCosts: UserCosts,
   overallHours: UserHours
-) => {};
+) => {
+  return {
+    weeklyData: weeklyData,
+  };
+};
 
 tableRouter.get("/fetchTableData", async (req, res) => {
   try {
@@ -231,7 +258,7 @@ tableRouter.get("/fetchTableData", async (req, res) => {
     });
 
     if (Array.isArray(postData) && postData.length === 0) {
-      res.status(200).send([]);
+      return res.status(200).send([]);
     }
 
     if (!isTableDataValid(postData)) {
@@ -249,13 +276,11 @@ tableRouter.get("/fetchTableData", async (req, res) => {
 
     const overallHours = addUpHowManyHoursWorked(postData);
 
-    const DayDataHoursAndCosts = mergeDayDataOverallHoursAndOverallCosts(
-      dataByDay,
-      overallCosts,
-      overallHours
-    );
-
-    res.status(200).send(postData);
+    res.status(200).send({
+      weeklyData: weeklyData,
+      costs: overallCosts,
+      hours: overallHours,
+    });
   } catch (err) {
     console.log(err);
     res.status(500).send(err);

@@ -1,3 +1,5 @@
+"use client";
+
 import { ChangeEvent, useEffect, useState } from "react";
 import Posts from "./Posts";
 import { feedState } from "../atom/feedAtom";
@@ -21,7 +23,7 @@ const Feed = (): JSX.Element => {
   });
 
   const fetchFeed = async () => {
-    const response = await fetch(`/posts/feed?page=${pagination}&limit=2`);
+    const response = await fetch(`/posts/feed?page=${pagination}&limit=10`);
 
     if (!response.ok) {
       setError(true);
