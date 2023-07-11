@@ -1,5 +1,5 @@
-import { useState } from "react";
 import "./css/table.css";
+import useSWR from "swr";
 
 type UserCosts = {
   [key: string]: {
@@ -13,67 +13,90 @@ type UserHours = {
   };
 };
 
+type CellData = {
+  _id: string;
+  name: string;
+  createdAt: Date;
+  costs: number;
+  hours: number;
+};
+
 export type MappedWeeklyData = {
-  [k: string]: (
-    | {
-        _id: string;
-        name: string;
-        createdAt: Date;
-        costs: number;
-        hours: number;
-      }
-    | undefined
-  )[];
+  [k: string]: (CellData | undefined)[];
 };
 
 type TableData = {
   weeklyData: MappedWeeklyData[];
-  costs: UserCosts;
-  hours: UserHours;
+  totalCosts: UserCosts;
+  totalHours: UserHours;
 };
 
-const Tables = async () => {
-  const [tableData, setTableData] = useState<TableData>();
+const isFetchTableDataValid = (
+  unknownData: unknown
+): unknownData is TableData => {
+  const dataFromDB = unknownData as TableData;
+  return (
+    dataFromDB !== undefined &&
+    dataFromDB.totalCosts !== undefined &&
+    dataFromDB.totalHours !== undefined &&
+    dataFromDB.weeklyData !== undefined
+  );
+};
 
-  try {
-    const response = await fetch(`/table-data/fetchTableData`);
+const Tables = () => {
+  const { data, error, isLoading } = useSWR(`/table-data/fetchTableData`);
 
-    if (!response.ok) {
-      throw new Error(
-        `This is an HTTP error fetching the table data: The status is ${response.status}`
-      );
-    }
+  if (error) return <h2>Failed to load table data</h2>;
 
-    const dbData = await response.json();
+  if (isLoading) return <h3>loading...</h3>;
 
-    setTableData(dbData);
-  } catch (error) {
-    console.error("An error occurred while fetching the feed:", error);
+  if (!isFetchTableDataValid(data)) {
+    console.error(`The structure of fetchTableData is not expected - ${data}`);
+    return <h2>There was an Error</h2>;
   }
 
+  const days = Object.keys(data.weeklyData);
+  const names = Object.keys(data.totalCosts);
+
   return (
-    <>
-      <h1>TABLES</h1>
-      <div className="App">
-        <table>
+    <div className="table-container">
+      <table className="table">
+        <thead>
           <tr>
             <th>Name</th>
-            <th>Age</th>
-            <th>Gender</th>
+            {days.map((day) => (
+              <th key={day}>{day}</th>
+            ))}
+            <th>Total Hours</th>
+            <th>Total Costs</th>
           </tr>
-          {tableData &&
-            tableData.weeklyData.map((val, key) => {
-              return (
-                <tr key={key}>
-                  <td>{}</td>
-                  <td>{}</td>
-                  <td>{}</td>
-                </tr>
-              );
-            })}
-        </table>
-      </div>
-    </>
+        </thead>
+        <tbody>
+          {names.map((name) => (
+            <tr key={name}>
+              <td>{name}</td>
+              {days.map((day) => {
+                const cellData = data.weeklyData[day].find(
+                  (item: CellData) => item.name === name
+                );
+                return (
+                  <td key={`${name}-${day}`}>
+                    {cellData ? (
+                      <>
+                        <div>Hours: {cellData.hours}</div>
+                        <div>Costs: {cellData.costs}</div>
+                      </>
+                    ) : null}
+                  </td>
+                );
+              })}
+              <td>{data.totalHours[name]?.hours}</td>
+              <td>{data.totalCosts[name]?.costs}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 };
 

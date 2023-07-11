@@ -261,8 +261,8 @@ tableRouter.get("/fetchTableData", async (req, res) => {
 
     res.status(200).send({
       weeklyData: weeklyData,
-      costs: overallCosts,
-      hours: overallHours,
+      totalCosts: overallCosts,
+      totalHours: overallHours,
     });
   } catch (err) {
     console.log(err);
