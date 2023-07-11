@@ -29,7 +29,7 @@ app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 app.use("/uploads", express.static(__dirname + "/uploads"));
 app.use("/posts", postsRouter);
-app.use("/tableData", tableRouter);
+app.use("/table-data", tableRouter);
 
 //Error Handlers
 

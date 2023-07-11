@@ -1,51 +1,87 @@
-"use client";
-
-import { ChangeEvent, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Posts from "./Posts";
 import { feedState } from "../atom/feedAtom";
 import { useRecoilState } from "recoil";
+import { PostState } from "../types/posts";
 
 const Feed = (): JSX.Element => {
-  const [feed, setFeed] = useRecoilState(feedState);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-  const [site, setSite] = useState("");
-  const [isFetching, setIsFetching] = useState(false);
-  const [pagination, setPagination] = useState(0);
-  const [noMorePosts, setNoMorePosts] = useState(false);
-
-  const handleSiteSelect = (event: ChangeEvent<HTMLSelectElement>) => {
-    setSite(event?.target.value);
-  };
-
-  const filteredSite = feed.filter((post) => {
-    return post.buildSite.toLowerCase().includes(site.toLowerCase());
-  });
+  const [feed, setFeed] = useRecoilState<PostState[]>(feedState);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<boolean>(false);
+  const [site, setSite] = useState<string>("");
+  const [isFetching, setIsFetching] = useState<boolean>(false);
+  const [pagination, setPagination] = useState<number>(0);
+  const [noMorePosts, setNoMorePosts] = useState<boolean>(false);
+  const [selectedOptionPosts, setSelectedOptionPosts] = useState<PostState[]>(
+    []
+  );
 
   const fetchFeed = async () => {
-    const response = await fetch(`/posts/feed?page=${pagination}&limit=10`);
+    try {
+      const response = await fetch(`/posts/feed?page=${pagination}&limit=2`);
 
-    if (!response.ok) {
-      setError(true);
-      throw new Error(
-        `This is an HTTP error loading the feed: The status is ${response.status}`
-      );
-    }
+      if (!response.ok) {
+        setError(true);
+        throw new Error(
+          `This is an HTTP error loading the feed: The status is ${response.status}`
+        );
+      }
 
-    if (response.status === 204) {
-      setNoMorePosts(true);
-      setLoading(false);
-    }
+      if (response.status === 204) {
+        setNoMorePosts(true);
+        setLoading(false);
+        return;
+      }
 
-    const feedData = await response.json();
+      const feedData: PostState[] = await response.json();
 
-    if (feed.length === 0) {
       setFeed(feedData);
-    } else {
-      setFeed([...feed, ...feedData]);
-    }
+      setSelectedOptionPosts(feedData);
+      setPagination((prevPagination) => prevPagination + 1);
 
-    setLoading(false);
+      setLoading(false);
+    } catch (error) {
+      setError(true);
+      console.error("An error occurred while fetching the feed:", error);
+    }
+  };
+
+  const handleSiteSelect = (selectedSite: string) => {
+    const filteredPosts = feed.filter((post) =>
+      post.buildSite.toLowerCase().includes(selectedSite.toLowerCase())
+    );
+
+    setSelectedOptionPosts(filteredPosts);
+  };
+
+  const fetchMorePosts = async () => {
+    try {
+      const response = await fetch(`/posts/feed?page=${pagination}&limit=2`);
+
+      if (!response.ok) {
+        setError(true);
+        throw new Error(
+          `This is an HTTP error loading more posts: The status is ${response.status}`
+        );
+      }
+
+      if (response.status === 204) {
+        setNoMorePosts(true);
+        setIsFetching(false);
+        return;
+      }
+
+      const morePosts: PostState[] = await response.json();
+
+      setFeed((prevFeed) => [...prevFeed, ...morePosts]);
+      setSelectedOptionPosts((prevPosts) => [...prevPosts, ...morePosts]);
+      setPagination((prevPagination) => prevPagination + 1);
+
+      setIsFetching(false);
+    } catch (error) {
+      setError(true);
+      console.error("An error occurred while fetching more posts:", error);
+    }
   };
 
   const handleScroll = () => {
@@ -58,38 +94,39 @@ const Feed = (): JSX.Element => {
     setIsFetching(true);
   };
 
-  const fetchMoreListItems = () => {
-    fetchFeed();
-    setPagination(pagination + 1);
-    setIsFetching(false);
+  const handleSiteChange = (selectedSite: string) => {
+    setSite(selectedSite);
+    if (selectedSite === "") {
+      setSelectedOptionPosts(feed);
+    } else {
+      handleSiteSelect(selectedSite);
+    }
   };
-
-  useEffect(() => {
-    if (!isFetching) return;
-    fetchMoreListItems();
-  }, [isFetching]);
-
-  useEffect(() => {
-    fetchFeed();
-    setPagination(pagination + 1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   useEffect(() => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    fetchFeed();
+  }, []);
+
+  useEffect(() => {
+    if (!isFetching) return;
+
+    fetchMorePosts();
+  }, [isFetching, pagination, setFeed]);
 
   return (
     <>
       <h3>What is happening on site:</h3>
       <div>
         <h4>Filter sites:</h4>
-        <select value={site} onChange={handleSiteSelect}>
+        <select value={site} onChange={(e) => handleSiteChange(e.target.value)}>
           <option value="">All Sites</option>
           <option value="32 James St">32 James St</option>
-          <option value="Nib">Nib</option>
+          <option value="NIB">NIB</option>
           <option value="7 Rose St">7 Rose St</option>
         </select>
       </div>
@@ -98,12 +135,14 @@ const Feed = (): JSX.Element => {
           <>
             {loading ? (
               <div>Searching for posts...</div>
-            ) : filteredSite.length > 0 ? (
-              filteredSite.map((post) => <Posts key={post._id} post={post} />)
+            ) : selectedOptionPosts.length > 0 ? (
+              selectedOptionPosts.map((post) => (
+                <Posts key={post._id} post={post} />
+              ))
             ) : (
               <div>No posts to view</div>
             )}
-            <div>{noMorePosts && <div>No more posts to load </div>}</div>
+            <div>{noMorePosts && <div>No more posts to load</div>}</div>
           </>
         ) : (
           <div>There has been an error loading the feed, please refresh</div>

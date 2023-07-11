@@ -46,13 +46,6 @@ export type UserHours = {
   };
 };
 
-export type UserCostsAndHours = {
-  [key: string]: {
-    hours: number;
-    costs: number;
-  };
-};
-
 const isTableDataValid = (
   unknownData: tableDataFromDB[] | unknown
 ): unknownData is tableDataFromDB[] => {
@@ -235,16 +228,6 @@ export const addUpHowManyHoursWorked = (data: tableDataFromDB[]): UserHours => {
   }
 
   return finalSums;
-};
-
-export const mergeDayDataOverallHoursAndOverallCosts = (
-  weeklyData: MappedWeeklyData,
-  overallCosts: UserCosts,
-  overallHours: UserHours
-) => {
-  return {
-    weeklyData: weeklyData,
-  };
 };
 
 tableRouter.get("/fetchTableData", async (req, res) => {

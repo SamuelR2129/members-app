@@ -35,6 +35,7 @@ postsRouter.get("/feed", async (req: Request, res: Response) => {
   try {
     const postsFromDB = await posts
       .find()
+      .sort({ createdAt: -1 })
       .skip(pageOptions.page * pageOptions.limit)
       .limit(pageOptions.limit)
       .exec();
