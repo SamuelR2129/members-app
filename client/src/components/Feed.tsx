@@ -3,6 +3,15 @@ import Posts from "./Posts";
 import { feedState } from "../atom/feedAtom";
 import { useRecoilState } from "recoil";
 import { PostState } from "../types/posts";
+import tw from "tailwind-styled-components";
+
+const SiteFilter = tw.div`
+  flex pt-4 pb-4
+`;
+
+const FilterHeading = tw.h4`
+  my-0 mr-10
+`;
 
 const Feed = (): JSX.Element => {
   const [feed, setFeed] = useRecoilState<PostState[]>(feedState);
@@ -18,7 +27,7 @@ const Feed = (): JSX.Element => {
 
   const fetchFeed = async () => {
     try {
-      const response = await fetch(`/posts/feed?page=${pagination}&limit=2`);
+      const response = await fetch(`/posts/feed?page=${pagination}&limit=10`);
 
       if (!response.ok) {
         setError(true);
@@ -120,16 +129,15 @@ const Feed = (): JSX.Element => {
 
   return (
     <>
-      <h3>What is happening on site:</h3>
-      <div>
-        <h4>Filter sites:</h4>
+      <SiteFilter>
+        <FilterHeading>Filter build sites:</FilterHeading>
         <select value={site} onChange={(e) => handleSiteChange(e.target.value)}>
           <option value="">All Sites</option>
           <option value="32 James St">32 James St</option>
           <option value="NIB">NIB</option>
           <option value="7 Rose St">7 Rose St</option>
         </select>
-      </div>
+      </SiteFilter>
       <div>
         {!error ? (
           <>

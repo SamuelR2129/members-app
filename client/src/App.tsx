@@ -1,5 +1,5 @@
 import { Routes, Route } from "react-router-dom";
-import MainFeed from "./pages/Feed";
+import MainPage from "./pages/MainPage";
 import Tables from "./pages/Tables";
 import Contractors from "./pages/Contractors";
 import Navbar from "./components/Navbar";
@@ -16,7 +16,7 @@ function App() {
       <Navbar />
 
       <Routes>
-        <Route path="/" element={<MainFeed />} />
+        <Route path="/" element={<MainPage />} />
         <Route path="/tables" element={<Tables />} />
         <Route path="/contractors" element={<Contractors />} />
       </Routes>

@@ -1,7 +1,34 @@
 import { ChangeEvent, FormEvent, useReducer, useState } from "react";
 import { useRecoilState } from "recoil";
 import { feedState } from "../atom/feedAtom";
-import { AddPostResponseData, PostState } from "../types/posts";
+import { AddPostResponseData } from "../types/posts";
+import tw from "tailwind-styled-components";
+
+const Modal = tw.div`
+  fixed
+  inset-0
+  bg-black
+  bg-opacity-50
+  flex
+  items-center
+  justify-center
+`;
+
+const ModalContent = tw.div`
+  w-500
+  bg-white
+`;
+
+const ModalHeaderFooter = tw.div`
+  p-10
+`;
+
+const ModalBody = tw.div`
+  p-10
+  border-t
+  border-b
+  border-gray-300
+`;
 
 const formReducer = (state: any, event: any) => {
   if (event.reset) {
@@ -86,10 +113,9 @@ const AddPostForm = () => {
   };
 
   const handleChange = (
-    event:
-      | ChangeEvent<HTMLSelectElement>
-      | ChangeEvent<HTMLInputElement>
-      | ChangeEvent<HTMLTextAreaElement>
+    event: ChangeEvent<
+      HTMLSelectElement | HTMLInputElement | HTMLTextAreaElement
+    >
   ) => {
     setFormData({
       name: event.target.name,
@@ -106,92 +132,101 @@ const AddPostForm = () => {
   };
 
   return (
-    <div>
-      <h2>Make A Post</h2>
-      {submitting && <div>Submtting Form...</div>}
-      <form onSubmit={handleSubmit}>
-        <fieldset disabled={submitting}>
-          <label>
-            <p>Name:</p>
-            <select
-              name="name"
-              onChange={handleChange}
-              value={formData.name || ""}
-              required
-            >
-              <option value="">--Please choose an option--</option>
-              <option value="Elliott">Elliott</option>
-              <option value="Pierce">Pierce</option>
-              <option value="Sam">Sam</option>
-            </select>
-          </label>
-          <label>
-            <p>Choose a site:</p>
-            <select
-              name="buildSite"
-              onChange={handleChange}
-              value={formData.buildSite || ""}
-              required
-            >
-              <option value="">--Please choose an option--</option>
-              <option value="7 Rose Street">7 Rose Street</option>
-              <option value="NIB">NIB</option>
-              <option value="11 Beach Street">11 Beach Street</option>
-            </select>
-          </label>
-          <label>
-            <p>Hours</p>
-            <input
-              type="number"
-              step="0.01"
-              name="hours"
-              value={formData.hours || ""}
-              onChange={handleChange}
-              required
-              placeholder="e.g 8, 8.75"
-            />
-          </label>
-          <label>
-            <p>Costs</p>
-            <input
-              type="number"
-              step="0.01"
-              name="costs"
-              value={formData.costs || ""}
-              onChange={handleChange}
-              required
-              placeholder="e.g 324, 324.25"
-            />
-          </label>
-          <label>
-            <p>Report:</p>
-            <textarea
-              name="report"
-              value={formData.report || ""}
-              onChange={handleChange}
-              rows={5}
-              cols={60}
-              required
-              className="w-[97%]"
-            />
-          </label>
-          <label>
-            <p>Add Image:</p>
-            <input
-              type="file"
-              name="images"
-              className="imageInput"
-              onChange={onImageChange}
-              key={inputKey}
-              multiple
-            />
-          </label>
-        </fieldset>
-        <button type="submit" disabled={submitting}>
-          Submit
-        </button>
-      </form>
-    </div>
+    <Modal>
+      <ModalContent>
+        <ModalHeaderFooter>
+          <h2 className="m-0">Make A Post</h2>
+        </ModalHeaderFooter>
+        {submitting && <div>Submtting Form...</div>}
+
+        <form onSubmit={handleSubmit}>
+          <ModalBody>
+            <fieldset disabled={submitting}>
+              <label>
+                <p>Name:</p>
+                <select
+                  name="name"
+                  onChange={handleChange}
+                  value={formData.name || ""}
+                  required
+                >
+                  <option value="">--Please choose an option--</option>
+                  <option value="Elliott">Elliott</option>
+                  <option value="Pierce">Pierce</option>
+                  <option value="Sam">Sam</option>
+                </select>
+              </label>
+              <label>
+                <p>Choose a site:</p>
+                <select
+                  name="buildSite"
+                  onChange={handleChange}
+                  value={formData.buildSite || ""}
+                  required
+                >
+                  <option value="">--Please choose an option--</option>
+                  <option value="7 Rose Street">7 Rose Street</option>
+                  <option value="NIB">NIB</option>
+                  <option value="11 Beach Street">11 Beach Street</option>
+                </select>
+              </label>
+              <label>
+                <p>Hours</p>
+                <input
+                  type="number"
+                  step="0.01"
+                  name="hours"
+                  value={formData.hours || ""}
+                  onChange={handleChange}
+                  required
+                  placeholder="e.g 8, 8.75"
+                />
+              </label>
+              <label>
+                <p>Costs</p>
+                <input
+                  type="number"
+                  step="0.01"
+                  name="costs"
+                  value={formData.costs || ""}
+                  onChange={handleChange}
+                  required
+                  placeholder="e.g 324, 324.25"
+                />
+              </label>
+              <label>
+                <p>Report:</p>
+                <textarea
+                  name="report"
+                  value={formData.report || ""}
+                  onChange={handleChange}
+                  rows={5}
+                  cols={60}
+                  required
+                  className="w-[97%]"
+                />
+              </label>
+              <label>
+                <p>Add Image:</p>
+                <input
+                  type="file"
+                  name="images"
+                  className="imageInput"
+                  onChange={onImageChange}
+                  key={inputKey}
+                  multiple
+                />
+              </label>
+            </fieldset>
+          </ModalBody>
+          <ModalHeaderFooter>
+            <button type="submit" disabled={submitting}>
+              Submit
+            </button>
+          </ModalHeaderFooter>
+        </form>
+      </ModalContent>
+    </Modal>
   );
 };
 

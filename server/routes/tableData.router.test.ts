@@ -192,7 +192,7 @@ describe("addUpHowManyHoursWorked", () => {
   });
 });
 
-describe("updateArrayWithCost", () => {
+describe("addValuesTogether", () => {
   test("should update array elements with total cost and hours, removing duplicates", () => {
     const inputArray = [
       {

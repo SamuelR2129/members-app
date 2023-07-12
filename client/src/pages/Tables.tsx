@@ -1,24 +1,26 @@
-import "./css/table.css";
+import Table from "../components/Table";
+import { TableCell, TableHeading } from "../styles/twTable";
+import "../styles/table.css";
 import useSWR from "swr";
 
-type UserCosts = {
-  [key: string]: {
-    costs: number;
-  };
-};
-
-type UserHours = {
-  [key: string]: {
-    hours: number;
-  };
-};
-
-type CellData = {
+export type CellData = {
   _id: string;
   name: string;
   createdAt: Date;
   costs: number;
   hours: number;
+};
+
+export type UserCosts = {
+  [key: string]: {
+    costs: number;
+  };
+};
+
+export type UserHours = {
+  [key: string]: {
+    hours: number;
+  };
 };
 
 export type MappedWeeklyData = {
@@ -58,44 +60,24 @@ const Tables = () => {
   const days = Object.keys(data.weeklyData);
   const names = Object.keys(data.totalCosts);
 
+  console.log(days);
+
+  const tableProps = {
+    weeklyData: data.weeklyData,
+    totalHours: data.totalHours,
+    totalCosts: data.totalCosts,
+    days,
+    names,
+  };
+
+  console.log(tableProps);
+
   return (
     <div className="table-container">
-      <table className="table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            {days.map((day) => (
-              <th key={day}>{day}</th>
-            ))}
-            <th>Total Hours</th>
-            <th>Total Costs</th>
-          </tr>
-        </thead>
-        <tbody>
-          {names.map((name) => (
-            <tr key={name}>
-              <td>{name}</td>
-              {days.map((day) => {
-                const cellData = data.weeklyData[day].find(
-                  (item: CellData) => item.name === name
-                );
-                return (
-                  <td key={`${name}-${day}`}>
-                    {cellData ? (
-                      <>
-                        <div>Hours: {cellData.hours}</div>
-                        <div>Costs: {cellData.costs}</div>
-                      </>
-                    ) : null}
-                  </td>
-                );
-              })}
-              <td>{data.totalHours[name]?.hours}</td>
-              <td>{data.totalCosts[name]?.costs}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <h2>Current Table</h2>
+      <Table tableProps={tableProps} />
+      <h2>Previous Table</h2>
+      <Table tableProps={tableProps} />
     </div>
   );
 };

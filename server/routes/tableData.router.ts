@@ -12,16 +12,13 @@ export type tableDataFromDB = {
 };
 
 export type MappedWeeklyData = {
-  [k: string]: (
-    | {
-        _id: string;
-        name: string;
-        createdAt: Date;
-        costs: number;
-        hours: number;
-      }
-    | undefined
-  )[];
+  [k: string]: {
+    _id: string;
+    name: string;
+    createdAt: Date;
+    costs: number;
+    hours: number;
+  };
 };
 
 export type DataMappedToDay = {
@@ -124,51 +121,46 @@ export const sortDataByDay = (data: tableDataFromDB[]): DataMappedToDay => {
   return dayGroups;
 };
 
-export const addValuesTogether = (postValues: tableDataFromDB[]) => {
-  const uniqueKeys = new Set<string>();
+export const addValuesTogether = (
+  postValues: tableDataFromDB[]
+): tableDataFromDB[] => {
+  const duplicatePosts = postValues.map((element) => {
+    const matchingElements = postValues.filter(
+      (el) => el.name === element.name
+    );
 
-  return postValues
-    .map((element) => {
-      if (uniqueKeys.has(element.name)) {
-        return; // Skip duplicates
-      }
+    const totalCost = matchingElements.reduce((acc, el) => acc + +el.costs, 0);
 
-      const matchingElements = postValues.filter(
-        (el) => el.name === element.name
-      );
+    const totalHours = matchingElements.reduce((acc, el) => acc + +el.hours, 0);
 
-      const totalCost = matchingElements.reduce(
-        (acc, el) => acc + +el.costs,
-        0
-      );
+    return {
+      _id: element._id,
+      name: element.name,
+      createdAt: element.createdAt,
+      costs: totalCost,
+      hours: totalHours,
+    };
+  });
 
-      const totalHours = matchingElements.reduce(
-        (acc, el) => acc + +el.hours,
-        0
-      );
-
-      uniqueKeys.add(element.name);
-
-      return {
-        _id: element._id,
-        name: element.name,
-        createdAt: element.createdAt,
-        costs: totalCost,
-        hours: totalHours,
-      };
-    })
-    .filter((el) => el !== undefined);
+  //remove duplicates created by above algo
+  return duplicatePosts.filter(
+    (post, index) =>
+      duplicatePosts.findIndex((item) => item.name === post.name) === index
+  );
 };
 
 export const addDailyUserEntriesTogether = (
   data: DataMappedToDay
-): MappedWeeklyData => {
-  return Object.fromEntries(
-    Object.entries(data).map(([day, postValues]) => [
-      day,
-      addValuesTogether(postValues),
-    ])
-  );
+): DataMappedToDay => {
+  return {
+    monday: addValuesTogether(data.monday),
+    tuesday: addValuesTogether(data.tuesday),
+    wednesday: addValuesTogether(data.wednesday),
+    thursday: addValuesTogether(data.thursday),
+    friday: addValuesTogether(data.friday),
+    saturday: addValuesTogether(data.saturday),
+    sunday: addValuesTogether(data.sunday),
+  };
 };
 
 export const addUpHowMuchUserSpent = (data: tableDataFromDB[]): UserCosts => {
