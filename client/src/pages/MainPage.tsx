@@ -24,10 +24,8 @@ const MainPage = () => {
 
       <section className="">
         <h3>What is happening on site:</h3>
-        <FormButton onClick={() => setShowForm(!showForm)}>
-          {showForm ? "Hide Post Form" : "Make a Post"}
-        </FormButton>
-        {showForm && <AddPostForm />}
+        <FormButton onClick={() => setShowForm(true)}> Make a Post</FormButton>
+        <AddPostForm onClose={() => setShowForm(false)} show={showForm} />
         <Feed />
       </section>
     </div>
