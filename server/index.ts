@@ -25,7 +25,12 @@ const app = express();
 // Middleware - App Configuration
 app.use(express.json());
 app.use(helmet());
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    allowedHeaders: "Origin,X-Requested-With,Content-Type,Accept",
+  })
+);
 app.use(express.urlencoded({ extended: true }));
 app.use("/uploads", express.static(__dirname + "/uploads"));
 app.use("/posts", postsRouter);

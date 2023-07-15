@@ -1,10 +1,9 @@
 import { useRecoilState } from "recoil";
-import tw from "tailwind-styled-components";
-import { feedState } from "../atom/feedAtom";
-import { PostState } from "../types/posts";
-import { pulsePostCardToggle } from "./utilities";
-import { useState } from "react";
-import { EditFormModal } from "./EditFormModal";
+import { feedState, updatePostState } from "../atom/feedAtom";
+import { PostState } from "../types";
+import { pulsePostCardToggle } from "./utils";
+import { Link, useLocation } from "react-router-dom";
+import { DeleteButton, PostWrapper } from "../styles/posts";
 
 type PostType = {
   post: {
@@ -24,40 +23,6 @@ export type EditFormValues = {
   buildSite: string;
 };
 
-const PostWrapper = tw.div`
-  m-2
-  p-2
-  border-2
-  border-solid
-  border-gray-200
-`;
-
-const DeleteButton = tw.button`
-  p-1 
-  border-1 
-  border-solid 
-  bg-red-100
-  border-red-500
-  hover:bg-red-300
-  active:bg-red-500
-  active:ring 
-  active:ring-red-300
-  cursor-pointer
-`;
-
-const EditButton = tw.button`
-  p-1 
-  border-1 
-  border-solid 
-  bg-blue-100
-  border-blue-500
-  hover:bg-blue-300
-  active:bg-blue-500
-  active:ring 
-  active:ring-blue-300
-  cursor-pointer
-`;
-
 const removeStatePostById = (
   feed: PostState[],
   _idToRemove: string
@@ -67,13 +32,9 @@ const removeStatePostById = (
 };
 
 const Posts = ({ post }: PostType) => {
-  const [feed, setFeed] = useRecoilState(feedState);
-  const [showModal, setShowModal] = useState(false);
-  const [formValues, setFormValues] = useState<EditFormValues>({
-    _id: post._id,
-    report: "",
-    buildSite: "",
-  });
+  const [globalFeed, setGlobalFeed] = useRecoilState(feedState);
+  const [formValues, setFormValues] = useRecoilState(updatePostState);
+  const location = useLocation();
 
   const deletePost = async (post: PostState) => {
     pulsePostCardToggle();
@@ -96,31 +57,14 @@ const Posts = ({ post }: PostType) => {
       );
     }
 
-    const newFeed = removeStatePostById(feed, post._id);
-    setFeed(newFeed);
+    const newFeed = removeStatePostById(globalFeed, post._id);
+    setGlobalFeed(newFeed);
     pulsePostCardToggle();
     alert("Post was deleted!");
   };
 
-  const handleEditClick = (post: PostState) => {
-    setShowModal(true);
-    setFormValues(post);
-  };
-
-  const handleModalClose = () => {
-    setShowModal(false);
-  };
-
-  const editModalProps = {
-    handleModalClose,
-    formValues,
-    setFormValues,
-    setShowModal,
-  };
-
   return (
     <>
-      {showModal && <EditFormModal {...editModalProps} />}
       <PostWrapper id="post-wrapper">
         <div>{post.name}</div>
         <div>{post.buildSite}</div>
@@ -134,7 +78,14 @@ const Posts = ({ post }: PostType) => {
           />
         )}
         <div className="flex justify-between mt-4">
-          <EditButton onClick={() => handleEditClick(post)}>Edit</EditButton>
+          <Link
+            className="edit-link"
+            to="/modal/1"
+            state={{ previousLocation: location }}
+            onClick={() => setFormValues(post)}
+          >
+            Edit
+          </Link>
           <DeleteButton onClick={() => deletePost(post)}>Delete</DeleteButton>
         </div>
       </PostWrapper>

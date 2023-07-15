@@ -1,36 +1,42 @@
 import { ChangeEvent, FormEvent, useReducer, useState } from "react";
 import { useRecoilState } from "recoil";
 import { feedState } from "../atom/feedAtom";
-import { AddPostResponseData } from "../types/posts";
-import tw from "tailwind-styled-components";
 import { CSSTransition } from "react-transition-group";
 import { createPortal } from "react-dom";
+import { PostState } from "../types";
+import {
+  ModalBody,
+  ModalCloseButton,
+  ModalContent,
+  ModalHeaderFooter,
+  ModalInput,
+  ModalLabel,
+  ModalSelect,
+  ModalSubmitButton,
+  ModalTextarea,
+  ModalWrapper,
+} from "../styles/addPostFormModal";
+import axios from "axios";
 
-const Modal = tw.div`
-  fixed
-  inset-0
-  bg-black
-  bg-opacity-50
-  flex
-  items-center
-  justify-center
-`;
+type AddPostResponseData = {
+  status: number;
+  result: string;
+  data: [PostState];
+};
 
-const ModalContent = tw.div`
-  w-500
-  bg-white
-`;
+type FormProps = {
+  show: boolean;
+  onClose: () => void;
+};
 
-const ModalHeaderFooter = tw.div`
-  p-10
-`;
-
-const ModalBody = tw.div`
-  p-10
-  border-t
-  border-b
-  border-gray-300
-`;
+type AddPostFormData = {
+  name: string;
+  hours: number;
+  costs: number;
+  report: string;
+  buildSite: string;
+  images?: File;
+};
 
 const formReducer = (state: any, event: any) => {
   if (event.reset) {
@@ -49,53 +55,39 @@ const formReducer = (state: any, event: any) => {
   };
 };
 
-type FormProps = {
-  show: boolean;
-  onClose: () => void;
-};
-
 const AddPostForm = (props: FormProps) => {
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useReducer(formReducer, {});
   const [inputKey, setInputKey] = useState(Date.now());
-  const [feed, setFeed] = useRecoilState(feedState);
+  const [globalFeed, setGlobalFeed] = useRecoilState(feedState);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSubmitting(true);
 
     try {
-      const data = new FormData();
+      const data: AddPostFormData = {
+        name: formData.name,
+        hours: formData.hours,
+        costs: formData.costs,
+        report: formData.report,
+        buildSite: formData.buildSite,
+        images: formData.images || "",
+      };
 
-      data.set("name", formData.name);
-      data.set("hours", formData.hours);
-      data.set("costs", formData.costs);
-      data.set("report", formData.report);
-      data.set("buildSite", formData.buildSite);
-      if (formData.images) {
-        data.set("images", formData.images[0]);
-      }
-
-      const formPostResponse = await fetch(
+      const response = await axios.post<unknown>(
         `${process.env.REACT_APP_SERVER_URL}/posts/makepost`,
-        {
-          method: "POST",
-          mode: "cors",
-          body: data,
-        }
+        data
       );
-
-      const responseData: AddPostResponseData = await formPostResponse.json();
-
-      if (!responseData.data) {
+      if (!response) {
         throw new Error(
-          `Response from formPost is not valid or undefined - ${responseData}`
+          `Response from formPost is not valid or undefined - ${response}`
         );
       }
 
-      const newFeedPost = responseData.data[0];
+      const newFeedPost = response;
 
-      setFeed([newFeedPost, ...feed]);
+      setGlobalFeed([newFeedPost, ...globalFeed]);
 
       // resets the text based inputs
       setFormData({
@@ -107,6 +99,7 @@ const AddPostForm = (props: FormProps) => {
       setSubmitting(false);
 
       alert("Post was successful!");
+
       props.onClose();
     } catch (err) {
       console.error("System Error Submitting Post: ", err);
@@ -147,19 +140,19 @@ const AddPostForm = (props: FormProps) => {
           unmountOnExit
           timeout={{ enter: 0, exit: 300 }}
         >
-          <Modal onClick={props.onClose}>
+          <ModalWrapper onClick={() => props.onClose()}>
             <ModalContent onClick={(e) => e.stopPropagation()}>
               <ModalHeaderFooter>
                 <h2 className="m-0">Make A Post</h2>
               </ModalHeaderFooter>
-              {submitting && <div>Submtting Form...</div>}
+              {submitting && <div>Submitting Form...</div>}
 
               <form onSubmit={handleSubmit}>
                 <ModalBody>
                   <fieldset disabled={submitting}>
-                    <label>
+                    <ModalLabel>
                       <p>Name:</p>
-                      <select
+                      <ModalSelect
                         name="name"
                         onChange={handleChange}
                         value={formData.name || ""}
@@ -169,11 +162,11 @@ const AddPostForm = (props: FormProps) => {
                         <option value="Elliott">Elliott</option>
                         <option value="Pierce">Pierce</option>
                         <option value="Sam">Sam</option>
-                      </select>
-                    </label>
-                    <label>
+                      </ModalSelect>
+                    </ModalLabel>
+                    <ModalLabel>
                       <p>Choose a site:</p>
-                      <select
+                      <ModalSelect
                         name="buildSite"
                         onChange={handleChange}
                         value={formData.buildSite || ""}
@@ -183,11 +176,11 @@ const AddPostForm = (props: FormProps) => {
                         <option value="7 Rose Street">7 Rose Street</option>
                         <option value="NIB">NIB</option>
                         <option value="11 Beach Street">11 Beach Street</option>
-                      </select>
-                    </label>
-                    <label>
+                      </ModalSelect>
+                    </ModalLabel>
+                    <ModalLabel>
                       <p>Hours</p>
-                      <input
+                      <ModalInput
                         type="number"
                         step="0.01"
                         name="hours"
@@ -196,10 +189,10 @@ const AddPostForm = (props: FormProps) => {
                         required
                         placeholder="e.g 8, 8.75"
                       />
-                    </label>
-                    <label>
+                    </ModalLabel>
+                    <ModalLabel>
                       <p>Costs</p>
-                      <input
+                      <ModalInput
                         type="number"
                         step="0.01"
                         name="costs"
@@ -208,20 +201,19 @@ const AddPostForm = (props: FormProps) => {
                         required
                         placeholder="e.g 324, 324.25"
                       />
-                    </label>
-                    <label>
+                    </ModalLabel>
+                    <ModalLabel>
                       <p>Report:</p>
-                      <textarea
+                      <ModalTextarea
                         name="report"
                         value={formData.report || ""}
                         onChange={handleChange}
                         rows={5}
                         cols={60}
                         required
-                        className="w-[97%]"
                       />
-                    </label>
-                    <label>
+                    </ModalLabel>
+                    <ModalLabel>
                       <p>Add Image:</p>
                       <input
                         type="file"
@@ -231,18 +223,20 @@ const AddPostForm = (props: FormProps) => {
                         key={inputKey}
                         multiple
                       />
-                    </label>
+                    </ModalLabel>
                   </fieldset>
                 </ModalBody>
                 <ModalHeaderFooter>
-                  <button type="submit" disabled={submitting}>
+                  <ModalSubmitButton type="submit" disabled={submitting}>
                     Submit
-                  </button>
-                  <button onClick={props.onClose}>Close</button>
+                  </ModalSubmitButton>
+                  <ModalCloseButton onClick={() => props.onClose()}>
+                    Close
+                  </ModalCloseButton>
                 </ModalHeaderFooter>
               </form>
             </ModalContent>
-          </Modal>
+          </ModalWrapper>
         </CSSTransition>,
         rootElement
       )

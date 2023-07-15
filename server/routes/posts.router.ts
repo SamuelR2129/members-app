@@ -6,6 +6,8 @@ import multer from "multer";
 import mapPost from "../utilities/mapPost";
 import removeWasteDataFromNewPost from "../utilities/removeWasteDataFromNewPost";
 import { isPostsFromDBValid } from "../utilities/typeGaurds/isPostsFromDBValid";
+import { isUpdatedPostValid } from "./postTypeGaurds";
+import { ObjectId } from "mongodb";
 const multerStorage = multer.memoryStorage();
 const uploadMiddleware = multer({ storage: multerStorage });
 
@@ -56,26 +58,6 @@ postsRouter.get("/feed", async (req: Request, res: Response) => {
     res.status(500).send(`System error getting feed`);
   }
 });
-
-// get post
-/*
-postsRouter.get("/:_id", async (req: Request, res: Response) => {
-  const _id: number = parseInt(req.params._id, 10);
-
-  try {
-    const post: PostType | null = await posts.findById(_id);
-
-    if (post) {
-      res.status(200).send(post);
-    }
-
-    res.status(404).send("item not found");
-  } catch (err: any) {
-    res.status(500).send(err.message);
-  }
-});
-*/
-// make post
 
 postsRouter.post(
   "/makepost",
@@ -133,24 +115,35 @@ postsRouter.post(
 // update post
 
 postsRouter.post("/update/:_id", async (req: Request, res: Response) => {
-  const { report, buildSite, hours, costs }: PostType = req.body;
+  const { report, buildSite }: PostType = req.body;
 
   try {
-    const updatedPost = await posts.findByIdAndUpdate(req.params._id, {
-      report,
-      buildSite,
-      hours,
-      costs,
-    });
+    const oldPost = await posts.findById(req.params._id);
 
-    if (!updatedPost) {
+    const updatedPost = {
+      _id: oldPost?._id,
+      name: oldPost?.name,
+      hours: oldPost?.hours,
+      costs: oldPost?.costs,
+      report: report,
+      buildSite: buildSite,
+      createdAt: oldPost?.createdAt,
+    };
+
+    const updatedPostFromDB = await posts.findByIdAndUpdate(
+      updatedPost._id,
+      updatedPost,
+      { new: true }
+    );
+
+    if (!isUpdatedPostValid(updatedPostFromDB)) {
       throw new Error("Unable to find post to update in mongodb");
     }
 
     res.status(201).send({
       status: true,
       result: "Successfully updated your post",
-      data: updatedPost,
+      data: updatedPostFromDB,
     });
   } catch (err: any) {
     res.status(500).send(err.message);

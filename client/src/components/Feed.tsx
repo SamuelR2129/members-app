@@ -2,19 +2,12 @@ import { useEffect, useState } from "react";
 import Posts from "./Posts";
 import { feedState } from "../atom/feedAtom";
 import { useRecoilState } from "recoil";
-import { PostState } from "../types/posts";
-import tw from "tailwind-styled-components";
-
-const SiteFilter = tw.div`
-  flex pt-4 pb-4
-`;
-
-const FilterHeading = tw.h4`
-  my-0 mr-10
-`;
+import { PostState } from "../types";
+import { filterTrimOrderPosts } from "./utils";
+import { FilterHeading, SiteFilter } from "../styles/feed";
 
 const Feed = (): JSX.Element => {
-  const [feed, setFeed] = useRecoilState<PostState[]>(feedState);
+  const [globalFeed, setGlobalFeed] = useRecoilState<PostState[]>(feedState);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<boolean>(false);
   const [site, setSite] = useState<string>("");
@@ -44,23 +37,13 @@ const Feed = (): JSX.Element => {
 
       const feedData: PostState[] = await response.json();
 
-      setFeed(feedData);
-      setSelectedOptionPosts(feedData);
+      setGlobalFeed(feedData);
       setPagination((prevPagination) => prevPagination + 1);
-
       setLoading(false);
     } catch (error) {
       setError(true);
       console.error("An error occurred while fetching the feed:", error);
     }
-  };
-
-  const handleSiteSelect = (selectedSite: string) => {
-    const filteredPosts = feed.filter((post) =>
-      post.buildSite.toLowerCase().includes(selectedSite.toLowerCase())
-    );
-
-    setSelectedOptionPosts(filteredPosts);
   };
 
   const fetchMorePosts = async () => {
@@ -82,10 +65,8 @@ const Feed = (): JSX.Element => {
 
       const morePosts: PostState[] = await response.json();
 
-      setFeed((prevFeed) => [...prevFeed, ...morePosts]);
-      setSelectedOptionPosts((prevPosts) => [...prevPosts, ...morePosts]);
+      setGlobalFeed((prevFeed) => [...prevFeed, ...morePosts]);
       setPagination((prevPagination) => prevPagination + 1);
-
       setIsFetching(false);
     } catch (error) {
       setError(true);
@@ -103,12 +84,17 @@ const Feed = (): JSX.Element => {
     setIsFetching(true);
   };
 
-  const handleSiteChange = (selectedSite: string) => {
+  const filterAndSetPosts = (selectedSite: string) => {
+    const filteredPosts = filterTrimOrderPosts(globalFeed, selectedSite);
+    setSelectedOptionPosts(filteredPosts);
+  };
+
+  const checkForSiteOptions = (selectedSite: string) => {
     setSite(selectedSite);
     if (selectedSite === "") {
-      setSelectedOptionPosts(feed);
+      setSelectedOptionPosts(globalFeed);
     } else {
-      handleSiteSelect(selectedSite);
+      filterAndSetPosts(selectedSite);
     }
   };
 
@@ -122,18 +108,26 @@ const Feed = (): JSX.Element => {
   }, []);
 
   useEffect(() => {
+    console.log("globalstate change");
+    filterAndSetPosts(site);
+  }, [globalFeed]);
+
+  useEffect(() => {
     if (!isFetching) return;
 
     fetchMorePosts();
-  }, [isFetching, pagination, setFeed]);
+  }, [isFetching]);
 
   return (
     <>
       <SiteFilter>
         <FilterHeading>Filter build sites:</FilterHeading>
-        <select value={site} onChange={(e) => handleSiteChange(e.target.value)}>
+        <select
+          value={site}
+          onChange={(e) => checkForSiteOptions(e.target.value)}
+        >
           <option value="">All Sites</option>
-          <option value="32 James St">32 James St</option>
+          <option value="11 Beach Street">11 Beach Street</option>
           <option value="NIB">NIB</option>
           <option value="7 Rose St">7 Rose St</option>
         </select>

@@ -1,69 +1,91 @@
-import React, { FormEvent, SetStateAction } from "react";
-import { EditFormValues } from "./Posts";
-import { AddPostResponseData } from "../types/posts";
+import { FormEvent, useEffect, useRef } from "react";
+import { EditedPost } from "../types";
 import { useRecoilState } from "recoil";
-import { feedState } from "../atom/feedAtom";
+import { feedState, updatePostState } from "../atom/feedAtom";
+import axios from "axios";
+import { injectEditedPostIntoFeed } from "./utils";
+import { useNavigate } from "react-router-dom";
+import { disableBodyScroll, enableBodyScroll } from "body-scroll-lock";
+import {
+  ModalWrapper,
+  ModalContent,
+  ModalCloseButton,
+  ModalForm,
+  ModalLabel,
+  ModalSelect,
+  ModalTextarea,
+  ModalSubmitButton,
+} from "../styles/editFormModal";
 
-type EditFormModalProps = {
-  handleModalClose: () => void;
-  formValues: EditFormValues;
-  setFormValues: React.Dispatch<SetStateAction<EditFormValues>>;
-  setShowModal: React.Dispatch<SetStateAction<boolean>>;
+const isEditedPostValid = (unknownData: unknown): unknownData is EditedPost => {
+  const data = unknownData as EditedPost;
+  return (
+    data !== undefined &&
+    data.status === 201 &&
+    data.data !== undefined &&
+    data.data.data._id !== undefined &&
+    data.data.data.buildSite !== undefined &&
+    data.data.data.createdAt !== undefined &&
+    data.data.data.name !== undefined &&
+    data.data.data.report !== undefined
+  );
 };
 
-export const EditFormModal = ({
-  handleModalClose,
-  formValues,
-  setFormValues,
-  setShowModal,
-}: EditFormModalProps) => {
-  const [feed, setFeed] = useRecoilState(feedState);
+export const EditFormModal = () => {
+  const [globalFeed, setGlobalFeed] = useRecoilState(feedState);
+  const [formValues, setFormValues] = useRecoilState(updatePostState);
+  const navigate = useNavigate();
+  const modalRef = useRef(null);
 
   const handleFormSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    const data = new FormData();
+    const data = {
+      report: formValues.report,
+      buildSite: formValues.buildSite,
+    };
 
-    data.set("report", formValues.report);
-    data.set("buildSite", formValues.buildSite);
-
-    const formPostResponse = await fetch(
+    const response = await axios.post<unknown>(
       `${process.env.REACT_APP_SERVER_URL}/posts/update/${formValues._id}`,
-      {
-        method: "POST",
-        mode: "cors",
-        body: data,
-      }
+      data
     );
 
-    const responseData: AddPostResponseData = await formPostResponse.json();
-    console.log(responseData);
-
-    if (!responseData || responseData.status !== 201) {
-      throw new Error(
-        `Response from formPost is not valid or undefined - ${responseData}`
-      );
+    if (!isEditedPostValid(response)) {
+      console.error(response);
+      alert(`There was a problem updating your post`);
+      return;
     }
 
-    const newFeedPost = responseData.data[0];
+    const feedWithEditedPost = injectEditedPostIntoFeed(
+      response.data.data,
+      globalFeed
+    );
 
-    setFeed([newFeedPost, ...feed]);
+    setGlobalFeed(feedWithEditedPost);
     alert("Post was edited!");
-    setShowModal(false);
   };
 
-  return (
-    <div className="modal">
-      <div className="modal-content">
-        <span className="close" onClick={handleModalClose}>
-          &times;
-        </span>
-        <form onSubmit={handleFormSubmit}>
-          {/* form fields */}
+  //stops scrolling of the page behind the modal
+  useEffect(() => {
+    const observerRefValue = modalRef.current;
+    if (observerRefValue) {
+      disableBodyScroll(observerRefValue);
+    }
+    return () => {
+      if (observerRefValue) {
+        enableBodyScroll(observerRefValue);
+      }
+    };
+  }, []);
 
-          <label>
+  return (
+    <ModalWrapper ref={modalRef} onClick={() => navigate("/")}>
+      <ModalContent onClick={(e) => e.stopPropagation()}>
+        <ModalCloseButton onClick={() => navigate("/")}>close</ModalCloseButton>
+        <ModalForm onSubmit={handleFormSubmit}>
+          <ModalLabel>
             <p>Choose a site:</p>
-            <select
+            <ModalSelect
               name="buildSite"
               onChange={(e) =>
                 setFormValues({ ...formValues, buildSite: e.target.value })
@@ -75,11 +97,11 @@ export const EditFormModal = ({
               <option value="7 Rose Street">7 Rose Street</option>
               <option value="NIB">NIB</option>
               <option value="11 Beach Street">11 Beach Street</option>
-            </select>
-          </label>
-          <label>
+            </ModalSelect>
+          </ModalLabel>
+          <ModalLabel>
             <p>Report:</p>
-            <textarea
+            <ModalTextarea
               name="report"
               onChange={(e) =>
                 setFormValues({ ...formValues, report: e.target.value })
@@ -88,12 +110,11 @@ export const EditFormModal = ({
               rows={5}
               cols={60}
               required
-              className="w-[97%]"
             />
-          </label>
-          <button type="submit">Submit</button>
-        </form>
-      </div>
-    </div>
+          </ModalLabel>
+          <ModalSubmitButton type="submit">Submit</ModalSubmitButton>
+        </ModalForm>
+      </ModalContent>
+    </ModalWrapper>
   );
 };

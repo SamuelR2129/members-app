@@ -4,7 +4,7 @@ import {
   UserCosts,
   UserHours,
 } from "../pages/Tables";
-import { TableCell, TableHeading } from "../styles/twTable";
+import { TableCell, TableHeading } from "../styles/table";
 
 type TableProps = {
   tableProps: {

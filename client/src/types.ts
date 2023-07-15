@@ -8,8 +8,8 @@ export type PostState = {
   imageName?: string;
 };
 
-export type AddPostResponseData = {
+export type EditedPost = {
   status: number;
   result: string;
-  data: [PostState];
+  data: { data: PostState };
 };
