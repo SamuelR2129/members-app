@@ -12,8 +12,8 @@ type PostType = {
     report: string;
     buildSite: string;
     createdAt: string;
-    imageUrl?: string;
-    imageName?: string;
+    imageUrls?: string;
+    imageNames?: string;
   };
 };
 
@@ -39,7 +39,7 @@ const Posts = ({ post }: PostType) => {
   const deletePost = async (post: PostState) => {
     pulsePostCardToggle();
 
-    const deleteBodyData = { imageName: post.imageName || "" };
+    const deleteBodyData = { imageNames: post.imageNames || "" };
 
     const response = await fetch(`/posts/delete/${post._id}`, {
       method: "POST",
@@ -69,11 +69,11 @@ const Posts = ({ post }: PostType) => {
         <div>{post.name}</div>
         <div>{post.buildSite}</div>
         <div>{post.report}</div>
-        {post.imageUrl && (
+        {post.imageUrls && (
           <img
             alt="Feed"
-            src={post.imageUrl}
-            id={post.imageName}
+            src={post.imageUrls}
+            id={post.imageNames}
             style={{ width: "300px", height: "300px" }}
           />
         )}

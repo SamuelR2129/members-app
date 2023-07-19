@@ -4,8 +4,8 @@ export type PostState = {
   report: string;
   createdAt: string;
   buildSite: string;
-  imageUrl?: string;
-  imageName?: string;
+  imageNames: (string | undefined)[];
+  imageUrls: (string | undefined)[];
 };
 
 export type EditedPost = {

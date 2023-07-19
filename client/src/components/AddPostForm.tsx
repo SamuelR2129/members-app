@@ -21,7 +21,7 @@ import axios from "axios";
 type AddPostResponseData = {
   status: number;
   result: string;
-  data: [PostState];
+  data: PostState;
 };
 
 type FormProps = {
@@ -35,7 +35,24 @@ type AddPostFormData = {
   costs: number;
   report: string;
   buildSite: string;
-  images?: File;
+  images: File[] | File;
+};
+
+const addPostResponseIsValid = (
+  unknownData: unknown
+): unknownData is { data: PostState } => {
+  const data = unknownData as { data: PostState };
+  return (
+    data !== undefined &&
+    data.data !== undefined &&
+    data.data._id !== undefined &&
+    data.data.buildSite !== undefined &&
+    data.data.createdAt !== undefined &&
+    data.data.imageNames !== undefined &&
+    data.data.imageUrls !== undefined &&
+    data.data.name !== undefined &&
+    data.data.report !== undefined
+  );
 };
 
 const formReducer = (state: any, event: any) => {
@@ -72,22 +89,42 @@ const AddPostForm = (props: FormProps) => {
         costs: formData.costs,
         report: formData.report,
         buildSite: formData.buildSite,
-        images: formData.images || "",
+        images: formData.images || [],
       };
 
-      const response = await axios.post<unknown>(
-        `${process.env.REACT_APP_SERVER_URL}/posts/makepost`,
-        data
+      const formBody = new FormData();
+
+      Object.keys(data).forEach((key) =>
+        formBody.append(key, data[key as keyof typeof data] as string)
       );
-      if (!response) {
+
+      if (Array.isArray(data.images)) {
+        for (let file of data.images) {
+          formBody.append("images", file);
+        }
+      } else {
+        formBody.append("images", data.images);
+      }
+
+      console.log(formBody);
+
+      const response = await axios.post<PostState>(
+        `${process.env.REACT_APP_SERVER_URL}/posts/makepost`,
+        formBody,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      if (!addPostResponseIsValid(response)) {
         throw new Error(
           `Response from formPost is not valid or undefined - ${response}`
         );
       }
 
-      const newFeedPost = response;
-
-      setGlobalFeed([newFeedPost, ...globalFeed]);
+      setGlobalFeed([response.data, ...globalFeed]);
 
       // resets the text based inputs
       setFormData({

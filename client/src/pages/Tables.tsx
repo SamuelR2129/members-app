@@ -1,5 +1,4 @@
 import Table from "../components/Table";
-import { TableCell, TableHeading } from "../styles/table";
 import "../styles/table.css";
 import useSWR from "swr";
 
