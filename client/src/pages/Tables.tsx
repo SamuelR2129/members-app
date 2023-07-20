@@ -59,8 +59,6 @@ const Tables = () => {
   const days = Object.keys(data.weeklyData);
   const names = Object.keys(data.totalCosts);
 
-  console.log(days);
-
   const tableProps = {
     weeklyData: data.weeklyData,
     totalHours: data.totalHours,
@@ -68,8 +66,6 @@ const Tables = () => {
     days,
     names,
   };
-
-  console.log(tableProps);
 
   return (
     <div className="table-container">

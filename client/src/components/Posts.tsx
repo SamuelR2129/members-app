@@ -12,8 +12,8 @@ type PostType = {
     report: string;
     buildSite: string;
     createdAt: string;
-    imageUrls?: string;
-    imageNames?: string;
+    imageNames: (string | undefined)[];
+    imageUrls: (string | undefined)[];
   };
 };
 
@@ -62,6 +62,8 @@ const Posts = ({ post }: PostType) => {
     pulsePostCardToggle();
     alert("Post was deleted!");
   };
+
+  console.log(post);
 
   return (
     <>

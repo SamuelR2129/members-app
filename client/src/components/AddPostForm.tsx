@@ -40,18 +40,19 @@ type AddPostFormData = {
 
 const addPostResponseIsValid = (
   unknownData: unknown
-): unknownData is { data: PostState } => {
-  const data = unknownData as { data: PostState };
+): unknownData is { data: { data: PostState } } => {
+  const response = unknownData as { data: { data: PostState } };
   return (
-    data !== undefined &&
-    data.data !== undefined &&
-    data.data._id !== undefined &&
-    data.data.buildSite !== undefined &&
-    data.data.createdAt !== undefined &&
-    data.data.imageNames !== undefined &&
-    data.data.imageUrls !== undefined &&
-    data.data.name !== undefined &&
-    data.data.report !== undefined
+    response !== undefined &&
+    response.data !== undefined &&
+    response.data.data !== undefined &&
+    response.data.data._id !== undefined &&
+    response.data.data.buildSite !== undefined &&
+    response.data.data.createdAt !== undefined &&
+    response.data.data.imageNames !== undefined &&
+    response.data.data.imageUrls !== undefined &&
+    response.data.data.name !== undefined &&
+    response.data.data.report !== undefined
   );
 };
 
@@ -72,6 +73,34 @@ const formReducer = (state: any, event: any) => {
   };
 };
 
+const convertToFormData = (formData: AddPostFormData): FormData => {
+  const data: AddPostFormData = {
+    name: formData.name,
+    hours: formData.hours,
+    costs: formData.costs,
+    report: formData.report,
+    buildSite: formData.buildSite,
+    images: formData.images || [],
+  };
+
+  const formBody = new FormData();
+
+  Object.keys(data).forEach((key) => {
+    if (key === "images") {
+      // Handle images separately to be found in req.files
+      const imageFiles = data[key as keyof typeof data] as File[];
+      for (const imageFile of imageFiles) {
+        formBody.append("images", imageFile);
+      }
+    } else {
+      // For other form fields
+      formBody.append(key, data[key as keyof typeof data] as string);
+    }
+  });
+
+  return formBody;
+};
+
 const AddPostForm = (props: FormProps) => {
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useReducer(formReducer, {});
@@ -83,30 +112,7 @@ const AddPostForm = (props: FormProps) => {
     setSubmitting(true);
 
     try {
-      const data: AddPostFormData = {
-        name: formData.name,
-        hours: formData.hours,
-        costs: formData.costs,
-        report: formData.report,
-        buildSite: formData.buildSite,
-        images: formData.images || [],
-      };
-
-      const formBody = new FormData();
-
-      Object.keys(data).forEach((key) =>
-        formBody.append(key, data[key as keyof typeof data] as string)
-      );
-
-      if (Array.isArray(data.images)) {
-        for (let file of data.images) {
-          formBody.append("images", file);
-        }
-      } else {
-        formBody.append("images", data.images);
-      }
-
-      console.log(formBody);
+      const formBody = convertToFormData(formData);
 
       const response = await axios.post<PostState>(
         `${process.env.REACT_APP_SERVER_URL}/posts/makepost`,
@@ -119,12 +125,13 @@ const AddPostForm = (props: FormProps) => {
       );
 
       if (!addPostResponseIsValid(response)) {
-        throw new Error(
-          `Response from formPost is not valid or undefined - ${response}`
-        );
+        console.error(response);
+        throw new Error(`Response from makepost server is not correct`);
       }
 
-      setGlobalFeed([response.data, ...globalFeed]);
+      console.log(response);
+
+      setGlobalFeed([response.data.data, ...globalFeed]);
 
       // resets the text based inputs
       setFormData({

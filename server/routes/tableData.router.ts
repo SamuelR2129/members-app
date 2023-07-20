@@ -257,7 +257,7 @@ tableRouter.get("/fetchTableData", async (req, res) => {
       totalHours: overallHours,
     });
   } catch (err) {
-    console.log(err);
+    console.error(err);
     res.status(500).send(err);
   }
 });

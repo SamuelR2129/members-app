@@ -6,8 +6,8 @@ export type PostType = {
   report: string;
   buildSite: string;
   createdAt?: string;
-  imageName?: string;
-  imageUrl?: string;
+  imageNames?: string;
+  imageUrls?: string;
 };
 
 export type PostFromDB = {
@@ -16,8 +16,8 @@ export type PostFromDB = {
   report: string;
   buildSite: string;
   createdAt: string;
-  imageName?: string;
-  imageUrl?: string;
+  imageNames?: string[];
+  imageUrls?: string[];
 };
 
 export type PostWithImageName = {
@@ -26,7 +26,7 @@ export type PostWithImageName = {
   report: string;
   buildSite: string;
   createdAt: string;
-  imageName: string;
+  imageNames: string;
 };
 
 export type PostWithImageUrl = {
@@ -35,6 +35,6 @@ export type PostWithImageUrl = {
   report: string;
   buildSite: string;
   createdAt: string;
-  imageName: string;
-  imageUrl: string;
+  imageNames: (string | undefined)[];
+  imageUrls: (string | undefined)[];
 };

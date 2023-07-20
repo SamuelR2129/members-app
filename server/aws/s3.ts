@@ -47,20 +47,20 @@ export const uploadFileS3 = async (
         `There was an issue uploading image to s3 - code: ${uploadFileResult?.$metadata.httpStatusCode}, result:${uploadFileResult} `
       );
     }
-    return uploadFileResult;
+    return randomImageName;
   } catch (err) {
     throw err;
   }
 };
 
-export const getFilesFromS3 = async (imageName: string) => {
+export const getFilesFromS3 = async (imageNames: string) => {
   if (!bucketName) {
     console.error("bucketName for downloading tfrom s3 is undefined");
     return;
   }
   try {
     const command = new GetObjectCommand({
-      Key: imageName,
+      Key: imageNames,
       Bucket: bucketName,
     });
 
@@ -76,10 +76,10 @@ export const getFilesFromS3 = async (imageName: string) => {
   }
 };
 
-export const deleteFileFromS3 = async (imageName: string) => {
+export const deleteFileFromS3 = async (imageNames: string) => {
   try {
     const command = new DeleteObjectCommand({
-      Key: imageName,
+      Key: imageNames,
       Bucket: bucketName,
     });
 

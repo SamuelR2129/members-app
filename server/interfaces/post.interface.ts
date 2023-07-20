@@ -7,7 +7,7 @@ const PostSchema = new Mongoose.Schema(
     costs: String,
     report: String,
     buildSite: String,
-    imageName: String,
+    imageNames: [String],
   },
   {
     timestamps: true,

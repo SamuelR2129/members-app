@@ -5,6 +5,14 @@ import { useRecoilState } from "recoil";
 import { PostState } from "../types";
 import { filterTrimOrderPosts } from "./utils";
 import { FilterHeading, SiteFilter } from "../styles/feed";
+import axios, { AxiosResponse } from "axios";
+
+const isFetchingFeedResponseValid = (
+  unknownData: unknown
+): unknownData is AxiosResponse<PostState[]> => {
+  const data = unknownData as AxiosResponse<PostState[]>;
+  return data !== undefined && data.status === 200 && Array.isArray(data.data);
+};
 
 const Feed = (): JSX.Element => {
   const [globalFeed, setGlobalFeed] = useRecoilState<PostState[]>(feedState);
@@ -19,59 +27,24 @@ const Feed = (): JSX.Element => {
   );
 
   const fetchFeed = async () => {
-    try {
-      const response = await fetch(`/posts/feed?page=${pagination}&limit=10`);
+    const response = await axios(`/posts/feed?page=${pagination}&limit=5`);
 
-      if (!response.ok) {
-        setError(true);
-        throw new Error(
-          `This is an HTTP error loading the feed: The status is ${response.status}`
-        );
-      }
-
-      if (response.status === 204) {
-        setNoMorePosts(true);
-        setLoading(false);
-        return;
-      }
-
-      const feedData: PostState[] = await response.json();
-
-      setGlobalFeed(feedData);
-      setPagination((prevPagination) => prevPagination + 1);
-      setLoading(false);
-    } catch (error) {
+    if (!isFetchingFeedResponseValid(response) && response.status !== 204) {
+      console.error("An error occurred while fetching the feed:", response);
       setError(true);
-      console.error("An error occurred while fetching the feed:", error);
     }
-  };
 
-  const fetchMorePosts = async () => {
-    try {
-      const response = await fetch(`/posts/feed?page=${pagination}&limit=2`);
-
-      if (!response.ok) {
-        setError(true);
-        throw new Error(
-          `This is an HTTP error loading more posts: The status is ${response.status}`
-        );
-      }
-
-      if (response.status === 204) {
-        setNoMorePosts(true);
-        setIsFetching(false);
-        return;
-      }
-
-      const morePosts: PostState[] = await response.json();
-
-      setGlobalFeed((prevFeed) => [...prevFeed, ...morePosts]);
-      setPagination((prevPagination) => prevPagination + 1);
+    if (response.status === 204) {
+      setNoMorePosts(true);
       setIsFetching(false);
-    } catch (error) {
-      setError(true);
-      console.error("An error occurred while fetching more posts:", error);
+      setLoading(false);
+      return;
     }
+
+    setGlobalFeed((prevFeed) => [...prevFeed, ...response.data]);
+    setPagination((prevPagination) => prevPagination + 1);
+    setIsFetching(false);
+    setLoading(false);
   };
 
   const handleScroll = () => {
@@ -108,14 +81,13 @@ const Feed = (): JSX.Element => {
   }, []);
 
   useEffect(() => {
-    console.log("globalstate change");
     filterAndSetPosts(site);
   }, [globalFeed]);
 
   useEffect(() => {
     if (!isFetching) return;
 
-    fetchMorePosts();
+    fetchFeed();
   }, [isFetching]);
 
   return (
@@ -135,16 +107,11 @@ const Feed = (): JSX.Element => {
       <div>
         {!error ? (
           <>
-            {loading ? (
-              <div>Searching for posts...</div>
-            ) : selectedOptionPosts.length > 0 ? (
-              selectedOptionPosts.map((post) => (
-                <Posts key={post._id} post={post} />
-              ))
-            ) : (
-              <div>No posts to view</div>
-            )}
-            <div>{noMorePosts && <div>No more posts to load</div>}</div>
+            {selectedOptionPosts.map((post) => (
+              <Posts key={post._id} post={post} />
+            ))}
+            {noMorePosts && <div>No more posts to load</div>}
+            {loading && <div>Searching for posts...</div>}
           </>
         ) : (
           <div>There has been an error loading the feed, please refresh</div>

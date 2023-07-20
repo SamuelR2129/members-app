@@ -3,13 +3,28 @@ import { PostFromDB, PostType } from "../types";
 import posts from "../interfaces/post.interface";
 import { deleteFileFromS3, uploadFileS3 } from "../aws/s3";
 import multer from "multer";
-import mapPost from "../utilities/mapPost";
-import removeWasteDataFromNewPost from "../utilities/removeWasteDataFromNewPost";
 import { isPostsFromDBValid } from "../utilities/typeGaurds/isPostsFromDBValid";
 import { isUpdatedPostValid } from "./postTypeGaurds";
-import { ObjectId } from "mongodb";
-const multerStorage = multer.memoryStorage();
-const uploadMiddleware = multer({ storage: multerStorage });
+import addImageToPost from "../utilities/addImageToPost";
+import mapPosts from "../utilities/mapFeedPosts";
+import removeSensitiveData from "../utilities/removeSensitiveData";
+
+const storage = multer.memoryStorage();
+
+const upload = multer({ storage: storage });
+
+const isPostCreateValid = (unknown: unknown): unknown is PostFromDB => {
+  const dbPost = unknown as PostFromDB;
+  return (
+    dbPost !== undefined &&
+    dbPost._id !== undefined &&
+    dbPost.buildSite !== undefined &&
+    dbPost.createdAt !== undefined &&
+    dbPost.imageNames !== undefined &&
+    dbPost.name !== undefined &&
+    dbPost.report !== undefined
+  );
+};
 
 type PageOptions = {
   page: number;
@@ -50,7 +65,7 @@ postsRouter.get("/feed", async (req: Request, res: Response) => {
       throw new Error("Getting posts from DB there is a undefined/null value");
     }
 
-    const mappedPosts = await mapPost(postsFromDB);
+    const mappedPosts = await mapPosts(postsFromDB);
 
     res.status(200).send(mappedPosts);
   } catch (err: any) {
@@ -61,13 +76,16 @@ postsRouter.get("/feed", async (req: Request, res: Response) => {
 
 postsRouter.post(
   "/makepost",
-  uploadMiddleware.single("images"),
+  upload.array("images"),
   async (req: Request, res: Response) => {
     try {
-      const randomImageName = req.file ? Date() : undefined;
-      if (req.file && randomImageName) {
-        await uploadFileS3(req.file, randomImageName);
-      }
+      const files = req.files as Express.Multer.File[];
+      console.log("START", files);
+      const imageNames = await Promise.all(
+        files.map(async (file) => {
+          return await uploadFileS3(file, file.originalname);
+        })
+      );
 
       const { name, hours, costs, report, buildSite }: PostType = req.body;
 
@@ -77,30 +95,25 @@ postsRouter.post(
         costs: costs,
         report: report,
         buildSite: buildSite,
-        imageName: randomImageName,
+        imageNames: imageNames.length > 0 ? imageNames : undefined,
       });
 
-      if (!newPost) {
+      if (!isPostCreateValid(newPost)) {
         throw new Error(
           "Mongoose did not return a new post after it was created"
         );
       }
 
-      const trimmedPostData = removeWasteDataFromNewPost(newPost);
+      const trimmedPostData = removeSensitiveData(newPost);
 
-      const mappedPosts = await mapPost([trimmedPostData]);
+      const postWithImageInfo = await addImageToPost(trimmedPostData);
 
-      if (mappedPosts) {
-        return res.status(201).send({
-          valid: true,
-          result: "Post made successfully",
-          data: mappedPosts,
-        });
-      }
+      console.log("END", postWithImageInfo);
 
-      return res.status(500).send({
-        valid: false,
-        result: "Post was not successfull, Please try again",
+      return res.status(201).send({
+        valid: true,
+        result: "Post made successfully",
+        data: postWithImageInfo,
       });
     } catch (err: any) {
       console.error(`System error making post - ${err}`);
@@ -153,11 +166,11 @@ postsRouter.post("/update/:_id", async (req: Request, res: Response) => {
 // delete post
 
 postsRouter.post("/delete/:_id", async (req: Request, res: Response) => {
-  const imageName = req.body.imageName as string;
+  const imageNames = req.body.imageNames as string;
 
   try {
-    if (imageName.length > 0) {
-      deleteFileFromS3(imageName);
+    if (imageNames.length > 0) {
+      deleteFileFromS3(imageNames);
     }
 
     await posts.findByIdAndDelete({ _id: req.params._id });
