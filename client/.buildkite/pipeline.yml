@@ -1,0 +1,4 @@
+steps:
+  - label: ":hammer: Build"
+    command: "ts-node-dev --respawn --pretty --transpile-only index.ts"
+    key: build

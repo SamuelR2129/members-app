@@ -1,7 +1,7 @@
 import { useRecoilState } from "recoil";
 import { feedState } from "../atom/feedAtom";
 import { PostState } from "../types";
-import { pulsePostCardToggle } from "./utils";
+import { pulsePostCardToggle, restructureDateTime } from "./utils";
 import axios from "axios";
 import {
   PostName,
@@ -9,9 +9,10 @@ import {
   PostReport,
   ImageWrapper,
   PostImage,
-  StyledLink,
+  EditButton,
   PostWrapper,
   DeleteButton,
+  PostTimeCreated,
 } from "../styles/post";
 import { useState } from "react";
 import { EditPostModal } from "./EditPostModal";
@@ -46,6 +47,8 @@ const Post = ({ post }: PostType) => {
   const [globalFeed, setGlobalFeed] = useRecoilState(feedState);
   const [modal, setModal] = useState(false);
 
+  const timeAndDateCreated = restructureDateTime(post.createdAt);
+
   const toggle = () => setModal(!modal);
 
   const deletePost = async (post: PostState) => {
@@ -72,7 +75,9 @@ const Post = ({ post }: PostType) => {
   return (
     <PostWrapper id="post-wrapper">
       <PostName>{post.name}</PostName>
+
       <PostBuildSite>{post.buildSite}</PostBuildSite>
+      <PostTimeCreated>{timeAndDateCreated}</PostTimeCreated>
       <PostReport>{post.report}</PostReport>
       <ImageWrapper>
         {post.imageUrls &&
@@ -81,8 +86,8 @@ const Post = ({ post }: PostType) => {
           ))}
       </ImageWrapper>
 
-      <div className="flex justify-between w-full mt-4 mb-10">
-        <StyledLink onClick={() => toggle()}>Edit</StyledLink>
+      <div className="flex justify-between w-full mt-4 mb-7">
+        <EditButton onClick={() => toggle()}>Edit</EditButton>
         <EditPostModal show={modal} post={post} close={toggle} />
         <DeleteButton onClick={() => deletePost(post)}>Delete</DeleteButton>
       </div>

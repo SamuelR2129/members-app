@@ -1,16 +1,7 @@
-import tw from "tailwind-styled-components";
 import Feed from "../components/Feed";
 import { useState } from "react";
 import AddPostModal from "../components/AddPostModal";
-import { EditPostModal } from "../components/EditPostModal";
-
-const FormButton = tw.button`
-  px-4 
-  py-2 
-  bg-blue-300 
-  rounded
-  text-xl
-`;
+import { FormButton } from "../styles/mainPage";
 
 const MainPage = () => {
   const [showForm, setShowForm] = useState(false);
@@ -19,13 +10,13 @@ const MainPage = () => {
     <div className="container overflow-x-hidden">
       <article className="">
         <header>
-          <h1 className="">Eac-Rowan Builds</h1>
+          <h1 className="max-[850px]:text-5xl text-7xl">Eac-Rowan Builds</h1>
         </header>
       </article>
 
       <section className="">
-        <h3>What is happening on site:</h3>
-        <FormButton onClick={() => setShowForm(true)}> Make a Post</FormButton>
+        <h3 className="mb-3 mt-0">What is happening on site:</h3>
+        <FormButton onClick={() => setShowForm(true)}> Make a post</FormButton>
         <AddPostModal onClose={() => setShowForm(false)} show={showForm} />
         <Feed />
       </section>

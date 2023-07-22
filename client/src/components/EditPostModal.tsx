@@ -1,11 +1,9 @@
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { FormEvent, useState } from "react";
 import { EditedPost, PostState } from "../types";
 import { useRecoilState } from "recoil";
 import { feedState } from "../atom/feedAtom";
 import axios from "axios";
 import { injectEditedPostIntoFeed } from "./utils";
-import { useNavigate } from "react-router-dom";
-import { disableBodyScroll, enableBodyScroll } from "body-scroll-lock";
 import {
   ModalWrapper,
   ModalContent,

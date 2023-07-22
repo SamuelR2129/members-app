@@ -176,7 +176,7 @@ const AddPostModal = (props: FormProps) => {
       <ModalWrapper onClick={() => props.onClose()}>
         <ModalContent onClick={(e) => e.stopPropagation()}>
           <ModalHeaderFooter>
-            <h2 className="m-0">Make A Post</h2>
+            <h2 className="m-0">Make a post</h2>
           </ModalHeaderFooter>
           {submitting && <div>Submitting Form...</div>}
 

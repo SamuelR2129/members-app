@@ -4,7 +4,7 @@ import { feedState } from "../atom/feedAtom";
 import { useRecoilState } from "recoil";
 import { PostState } from "../types";
 import { filterTrimOrderPosts } from "./utils";
-import { FilterHeading, SiteFilter } from "../styles/feed";
+import { FilterHeading, FilterSelect, SiteFilter } from "../styles/feed";
 import axios, { AxiosResponse } from "axios";
 
 const isFetchingFeedResponseValid = (
@@ -94,7 +94,7 @@ const Feed = (): JSX.Element => {
     <>
       <SiteFilter>
         <FilterHeading>Filter build sites:</FilterHeading>
-        <select
+        <FilterSelect
           value={site}
           onChange={(e) => checkForSiteOptions(e.target.value)}
         >
@@ -102,7 +102,7 @@ const Feed = (): JSX.Element => {
           <option value="11 Beach Street">11 Beach Street</option>
           <option value="NIB">NIB</option>
           <option value="7 Rose St">7 Rose St</option>
-        </select>
+        </FilterSelect>
       </SiteFilter>
       <div>
         {!error ? (

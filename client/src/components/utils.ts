@@ -1,4 +1,6 @@
 import { PostState } from "../types";
+import { utcToZonedTime } from "date-fns-tz";
+import { parseISO, format } from "date-fns";
 
 export const pulsePostCardToggle = () => {
   document.querySelector("#post-wrapper")?.classList.toggle("animate-pulse");
@@ -31,4 +33,9 @@ export const injectEditedPostIntoFeed = (
   return globalFeed.map((post) =>
     post._id !== editedPost._id ? post : editedPost
   );
+};
+
+export const restructureDateTime = (dateTime: string) => {
+  const australiaTime = utcToZonedTime(parseISO(dateTime), "Australia/Sydney");
+  return format(australiaTime, "EEE HH:mm dd-MM-yy");
 };
