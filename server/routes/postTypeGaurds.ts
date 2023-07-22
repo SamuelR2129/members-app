@@ -1,9 +1,9 @@
-import { PostType } from "../types";
+import { PostFromDB, PostType } from "../types";
 
 export const isUpdatedPostValid = (
   unknownData: unknown
-): unknownData is PostType => {
-  const data = unknownData as PostType;
+): unknownData is PostFromDB => {
+  const data = unknownData as PostFromDB;
   return (
     data !== undefined &&
     data._id !== undefined &&

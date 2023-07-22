@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import Posts from "./Posts";
+import Post from "./Post";
 import { feedState } from "../atom/feedAtom";
 import { useRecoilState } from "recoil";
 import { PostState } from "../types";
@@ -108,7 +108,7 @@ const Feed = (): JSX.Element => {
         {!error ? (
           <>
             {selectedOptionPosts.map((post) => (
-              <Posts key={post._id} post={post} />
+              <Post key={post._id} post={post} />
             ))}
             {noMorePosts && <div>No more posts to load</div>}
             {loading && <div>Searching for posts...</div>}

@@ -5,7 +5,6 @@ import Contractors from "./pages/Contractors";
 import Navbar from "./components/Navbar";
 import { SWRConfig } from "swr";
 import axios from "axios";
-import { EditFormModal } from "./components/EditFormModal";
 
 function App() {
   const location = useLocation();
@@ -22,11 +21,6 @@ function App() {
         <Route path="/tables" element={<Tables />} />
         <Route path="/contractors" element={<Contractors />} />
       </Routes>
-      {previousLocation && (
-        <Routes>
-          <Route path="/modal/:id" element={<EditFormModal />} />
-        </Routes>
-      )}
     </SWRConfig>
   );
 }

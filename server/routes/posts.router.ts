@@ -80,7 +80,7 @@ postsRouter.post(
   async (req: Request, res: Response) => {
     try {
       const files = req.files as Express.Multer.File[];
-      console.log("START", files);
+
       const imageNames = await Promise.all(
         files.map(async (file) => {
           return await uploadFileS3(file, file.originalname);
@@ -107,8 +107,6 @@ postsRouter.post(
       const trimmedPostData = removeSensitiveData(newPost);
 
       const postWithImageInfo = await addImageToPost(trimmedPostData);
-
-      console.log("END", postWithImageInfo);
 
       return res.status(201).send({
         valid: true,
@@ -141,6 +139,7 @@ postsRouter.post("/update/:_id", async (req: Request, res: Response) => {
       report: report,
       buildSite: buildSite,
       createdAt: oldPost?.createdAt,
+      imageNames: oldPost?.imageNames,
     };
 
     const updatedPostFromDB = await posts.findByIdAndUpdate(
@@ -153,10 +152,12 @@ postsRouter.post("/update/:_id", async (req: Request, res: Response) => {
       throw new Error("Unable to find post to update in mongodb");
     }
 
+    const postWithImageInfo = await addImageToPost(updatedPostFromDB);
+
     res.status(201).send({
       status: true,
       result: "Successfully updated your post",
-      data: updatedPostFromDB,
+      data: postWithImageInfo,
     });
   } catch (err: any) {
     res.status(500).send(err.message);
@@ -166,11 +167,13 @@ postsRouter.post("/update/:_id", async (req: Request, res: Response) => {
 // delete post
 
 postsRouter.post("/delete/:_id", async (req: Request, res: Response) => {
-  const imageNames = req.body.imageNames as string;
+  const imageNames = req.body.imageNames as string | undefined;
 
   try {
-    if (imageNames.length > 0) {
-      deleteFileFromS3(imageNames);
+    if (imageNames && imageNames.length > 0) {
+      for (const imageName of imageNames) {
+        deleteFileFromS3(imageName);
+      }
     }
 
     await posts.findByIdAndDelete({ _id: req.params._id });

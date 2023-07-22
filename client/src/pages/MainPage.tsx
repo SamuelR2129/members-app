@@ -1,7 +1,8 @@
 import tw from "tailwind-styled-components";
 import Feed from "../components/Feed";
 import { useState } from "react";
-import AddPostForm from "../components/AddPostForm";
+import AddPostModal from "../components/AddPostModal";
+import { EditPostModal } from "../components/EditPostModal";
 
 const FormButton = tw.button`
   px-4 
@@ -25,7 +26,7 @@ const MainPage = () => {
       <section className="">
         <h3>What is happening on site:</h3>
         <FormButton onClick={() => setShowForm(true)}> Make a Post</FormButton>
-        <AddPostForm onClose={() => setShowForm(false)} show={showForm} />
+        <AddPostModal onClose={() => setShowForm(false)} show={showForm} />
         <Feed />
       </section>
     </div>
