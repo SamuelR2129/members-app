@@ -45,15 +45,16 @@ export const ModalSelect = tw.select`
 `;
 
 export const ModalInput = tw.input`
-  w-full
+  w-[94%]
   p-2
   border
   border-gray-300
   rounded
+  appearance-none
 `;
 
 export const ModalTextarea = tw.textarea`
-  w-full
+  w-[94%]
   p-2
   border
   border-gray-300
@@ -78,4 +79,5 @@ export const ModalCloseButton = tw.button`
   text-white
   rounded
   hover:bg-red-600
+  float-right
 `;

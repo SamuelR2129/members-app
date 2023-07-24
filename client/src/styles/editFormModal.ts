@@ -24,11 +24,13 @@ export const ModalContent = tw.div`
 `;
 
 export const ModalCloseButton = tw.button`
-  absolute
-  top-2
-  right-2
-  text-gray-500
-  hover:text-gray-700
+  px-4
+  py-2
+  bg-red-500
+  text-white
+  rounded
+  hover:bg-red-600
+  float-right
 `;
 
 export const ModalForm = tw.form`

@@ -88,7 +88,6 @@ export const EditPostModal = ({ show, post, close }: EditPostModal) => {
       {show ? (
         <ModalWrapper onClick={() => close()}>
           <ModalContent onClick={(e) => e.stopPropagation()}>
-            <ModalCloseButton onClick={() => close()}>close</ModalCloseButton>
             <ModalForm onSubmit={handleFormSubmit}>
               <ModalLabel>
                 <p>Choose a site:</p>
@@ -127,6 +126,7 @@ export const EditPostModal = ({ show, post, close }: EditPostModal) => {
                 />
               </ModalLabel>
               <ModalSubmitButton type="submit">Submit</ModalSubmitButton>
+              <ModalCloseButton onClick={() => close()}>close</ModalCloseButton>
             </ModalForm>
           </ModalContent>
         </ModalWrapper>
