@@ -11,16 +11,6 @@ export type tableDataFromDB = {
   hours: string | number;
 };
 
-export type MappedWeeklyData = {
-  [k: string]: {
-    _id: string;
-    name: string;
-    createdAt: Date;
-    costs: number;
-    hours: number;
-  };
-};
-
 export type DataMappedToDay = {
   monday: tableDataFromDB[];
   tuesday: tableDataFromDB[];
@@ -41,6 +31,12 @@ export type UserHours = {
   [key: string]: {
     hours: number;
   };
+};
+
+export type WeeklyMappedData = {
+  weeklyData: DataMappedToDay;
+  overallCosts: UserCosts;
+  overallHours: UserHours;
 };
 
 const isTableDataValid = (
@@ -64,7 +60,31 @@ export const subtractDaysFromWeek = (currentDay: Date) => {
   const previousDays = new Date(currentDay);
   previousDays.setDate(currentDay.getDate() - daysToSubtract);
 
-  return previousDays;
+  const previousDaysAndWeek = new Date(
+    previousDays.getTime() - 7 * 24 * 60 * 60 * 1000
+  );
+
+  return { previousDaysAndWeek, previousDays };
+};
+
+export const sortDataByWeek = (
+  postData: tableDataFromDB[],
+  previousDays: Date
+) => {
+  const first: tableDataFromDB[] = [];
+  const second: tableDataFromDB[] = [];
+
+  postData.forEach((post) => {
+    const objDate = new Date(post.createdAt);
+
+    if (objDate < previousDays) {
+      first.push(post);
+    } else {
+      second.push(post);
+    }
+  });
+
+  return [first, second];
 };
 
 export const sortDataByDay = (data: tableDataFromDB[]): DataMappedToDay => {
@@ -229,7 +249,7 @@ tableRouter.get("/fetchTableData", async (req, res) => {
 
     // Retrieve all entries with a users name
     const postData = await posts.find({
-      createdAt: { $gte: pastDate, $lte: currentDay },
+      createdAt: { $gte: pastDate.previousDaysAndWeek, $lte: currentDay },
     });
 
     if (Array.isArray(postData) && postData.length === 0) {
@@ -243,19 +263,27 @@ tableRouter.get("/fetchTableData", async (req, res) => {
       });
     }
 
-    const dataByDay = sortDataByDay(postData);
+    const dataByWeek = sortDataByWeek(postData, pastDate.previousDays);
 
-    const weeklyData = addDailyUserEntriesTogether(dataByDay);
+    const weeklyMappedData = dataByWeek.map(
+      (oneWeeksData): WeeklyMappedData => {
+        const dataByDay = sortDataByDay(oneWeeksData);
 
-    const overallCosts = addUpHowMuchUserSpent(postData);
+        const weeklyData = addDailyUserEntriesTogether(dataByDay);
 
-    const overallHours = addUpHowManyHoursWorked(postData);
+        const overallCosts = addUpHowMuchUserSpent(oneWeeksData);
 
-    res.status(200).send({
-      weeklyData: weeklyData,
-      totalCosts: overallCosts,
-      totalHours: overallHours,
-    });
+        const overallHours = addUpHowManyHoursWorked(oneWeeksData);
+
+        return {
+          weeklyData,
+          overallCosts,
+          overallHours,
+        };
+      }
+    );
+
+    res.status(200).send(weeklyMappedData);
   } catch (err) {
     console.error(err);
     res.status(500).send(err);

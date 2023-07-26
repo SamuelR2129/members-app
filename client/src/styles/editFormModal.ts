@@ -60,7 +60,6 @@ export const ModalTextarea = tw.textarea`
 `;
 
 export const ModalSubmitButton = tw.button`
-  mt-4
   px-4
   py-2
   bg-blue-500

@@ -28,20 +28,15 @@ export type MappedWeeklyData = {
 
 type TableData = {
   weeklyData: MappedWeeklyData[];
-  totalCosts: UserCosts;
-  totalHours: UserHours;
+  overallCosts: UserCosts;
+  overallHours: UserHours;
 };
 
 const isFetchTableDataValid = (
   unknownData: unknown
-): unknownData is TableData => {
-  const dataFromDB = unknownData as TableData;
-  return (
-    dataFromDB !== undefined &&
-    dataFromDB.totalCosts !== undefined &&
-    dataFromDB.totalHours !== undefined &&
-    dataFromDB.weeklyData !== undefined
-  );
+): unknownData is TableData[] => {
+  const dataFromDB = unknownData as TableData[];
+  return dataFromDB !== undefined && Array.isArray(dataFromDB);
 };
 
 const Tables = () => {
@@ -56,23 +51,25 @@ const Tables = () => {
     return <h2>There was an Error</h2>;
   }
 
-  const days = Object.keys(data.weeklyData);
-  const names = Object.keys(data.totalCosts);
+  const weeklyTableProps = data.map((tableData) => {
+    const days = Object.keys(tableData.weeklyData);
+    const names = Object.keys(tableData.overallCosts);
 
-  const tableProps = {
-    weeklyData: data.weeklyData,
-    totalHours: data.totalHours,
-    totalCosts: data.totalCosts,
-    days,
-    names,
-  };
+    return {
+      weeklyData: tableData.weeklyData,
+      totalHours: tableData.overallHours,
+      totalCosts: tableData.overallCosts,
+      days,
+      names,
+    };
+  });
 
   return (
     <div className="table-container">
       <h2>Current Table</h2>
-      <Table tableProps={tableProps} />
+      <Table tableProps={weeklyTableProps[1]} />
       <h2>Previous Table</h2>
-      <Table tableProps={tableProps} />
+      <Table tableProps={weeklyTableProps[0]} />
     </div>
   );
 };

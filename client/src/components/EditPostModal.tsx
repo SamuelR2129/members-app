@@ -125,8 +125,12 @@ export const EditPostModal = ({ show, post, close }: EditPostModal) => {
                   required
                 />
               </ModalLabel>
-              <ModalSubmitButton type="submit">Submit</ModalSubmitButton>
-              <ModalCloseButton onClick={() => close()}>close</ModalCloseButton>
+              <div className="flex justify-between">
+                <ModalSubmitButton type="submit">Submit</ModalSubmitButton>
+                <ModalCloseButton onClick={() => close()}>
+                  Close
+                </ModalCloseButton>
+              </div>
             </ModalForm>
           </ModalContent>
         </ModalWrapper>
