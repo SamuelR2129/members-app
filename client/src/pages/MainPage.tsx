@@ -1,7 +1,7 @@
-import Feed from "../components/Feed";
-import { useState } from "react";
-import AddPostModal from "../components/AddPostModal";
-import { FormButton } from "../styles/mainPage";
+import Feed from '../components/Feed';
+import { useState } from 'react';
+import AddPostModal from '../components/AddPostModal';
+import { FormButton } from '../styles/mainPage';
 
 const MainPage = () => {
   const [showForm, setShowForm] = useState(false);
@@ -17,7 +17,7 @@ const MainPage = () => {
       <section className="">
         <h3 className="mb-3 mt-0">What is happening on site:</h3>
         <FormButton onClick={() => setShowForm(true)}> Make a post</FormButton>
-        <AddPostModal onClose={() => setShowForm(false)} show={showForm} />
+        {showForm && <AddPostModal onClose={() => setShowForm(false)} show={showForm} />}
         <Feed />
       </section>
     </div>

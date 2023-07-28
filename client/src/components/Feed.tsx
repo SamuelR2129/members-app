@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
-import Post from "./Post";
-import { feedState } from "../atom/feedAtom";
-import { useRecoilState } from "recoil";
-import { PostState } from "../types";
-import { filterTrimOrderPosts } from "./utils";
-import { FilterHeading, FilterSelect, SiteFilter } from "../styles/feed";
-import axios, { AxiosResponse } from "axios";
+import { useEffect, useState } from 'react';
+import Post from './Post';
+import { feedState } from '../atom/feedAtom';
+import { useRecoilState } from 'recoil';
+import { PostState } from '../types';
+import { filterTrimOrderPosts } from './utils';
+import { FilterHeading, FilterSelect, SiteFilter } from '../styles/feed';
+import axios, { AxiosResponse } from 'axios';
 
 const isFetchingFeedResponseValid = (
   unknownData: unknown
@@ -18,19 +18,17 @@ const Feed = (): JSX.Element => {
   const [globalFeed, setGlobalFeed] = useRecoilState<PostState[]>(feedState);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<boolean>(false);
-  const [site, setSite] = useState<string>("");
+  const [site, setSite] = useState<string>('');
   const [isFetching, setIsFetching] = useState<boolean>(false);
   const [pagination, setPagination] = useState<number>(0);
   const [noMorePosts, setNoMorePosts] = useState<boolean>(false);
-  const [selectedOptionPosts, setSelectedOptionPosts] = useState<PostState[]>(
-    []
-  );
+  const [selectedOptionPosts, setSelectedOptionPosts] = useState<PostState[]>([]);
 
   const fetchFeed = async () => {
     const response = await axios(`/posts/feed?page=${pagination}&limit=5`);
 
     if (!isFetchingFeedResponseValid(response) && response.status !== 204) {
-      console.error("An error occurred while fetching the feed:", response);
+      console.error('An error occurred while fetching the feed:', response);
       setError(true);
     }
 
@@ -64,7 +62,7 @@ const Feed = (): JSX.Element => {
 
   const checkForSiteOptions = (selectedSite: string) => {
     setSite(selectedSite);
-    if (selectedSite === "") {
+    if (selectedSite === '') {
       setSelectedOptionPosts(globalFeed);
     } else {
       filterAndSetPosts(selectedSite);
@@ -72,8 +70,8 @@ const Feed = (): JSX.Element => {
   };
 
   useEffect(() => {
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   useEffect(() => {
@@ -94,10 +92,7 @@ const Feed = (): JSX.Element => {
     <>
       <SiteFilter>
         <FilterHeading>Filter build sites:</FilterHeading>
-        <FilterSelect
-          value={site}
-          onChange={(e) => checkForSiteOptions(e.target.value)}
-        >
+        <FilterSelect value={site} onChange={(e) => checkForSiteOptions(e.target.value)}>
           <option value="">All Sites</option>
           <option value="11 Beach Street">11 Beach Street</option>
           <option value="NIB">NIB</option>

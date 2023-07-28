@@ -1,9 +1,9 @@
-import { FormEvent, useState } from "react";
-import { EditedPost, PostState } from "../types";
-import { useRecoilState } from "recoil";
-import { feedState } from "../atom/feedAtom";
-import axios from "axios";
-import { injectEditedPostIntoFeed } from "./utils";
+import { FormEvent, useState } from 'react';
+import { EditedPost, PostState } from '../types';
+import { useRecoilState } from 'recoil';
+import { feedState } from '../atom/feedAtom';
+import axios from 'axios';
+import { injectEditedPostIntoFeed } from './utils';
 import {
   ModalWrapper,
   ModalContent,
@@ -12,9 +12,9 @@ import {
   ModalLabel,
   ModalSelect,
   ModalTextarea,
-  ModalSubmitButton,
-} from "../styles/editFormModal";
-import ReactDOM from "react-dom";
+  ModalSubmitButton
+} from '../styles/editFormModal';
+import ReactDOM from 'react-dom';
 
 const isEditedPostValid = (unknownData: unknown): unknownData is EditedPost => {
   const data = unknownData as EditedPost;
@@ -59,7 +59,7 @@ export const EditPostModal = ({ show, post, close }: EditPostModal) => {
 
     const data = {
       report: editedValues.report,
-      buildSite: editedValues.buildSite,
+      buildSite: editedValues.buildSite
     };
 
     const response = await axios.post<unknown>(
@@ -73,13 +73,10 @@ export const EditPostModal = ({ show, post, close }: EditPostModal) => {
       return;
     }
 
-    const feedWithEditedPost = injectEditedPostIntoFeed(
-      response.data.data,
-      globalFeed
-    );
+    const feedWithEditedPost = injectEditedPostIntoFeed(response.data.data, globalFeed);
 
     setGlobalFeed(feedWithEditedPost);
-    alert("Post was edited!");
+    alert('Post was edited!');
     close();
   };
 
@@ -96,12 +93,11 @@ export const EditPostModal = ({ show, post, close }: EditPostModal) => {
                   onChange={(e) =>
                     setEditedValues({
                       ...editedValues,
-                      buildSite: e.target.value,
+                      buildSite: e.target.value
                     })
                   }
-                  value={editedValues.buildSite || ""}
-                  required
-                >
+                  value={editedValues.buildSite || ''}
+                  required>
                   <option value="">--Please choose an option--</option>
                   <option value="7 Rose Street">7 Rose Street</option>
                   <option value="NIB">NIB</option>
@@ -116,10 +112,10 @@ export const EditPostModal = ({ show, post, close }: EditPostModal) => {
                     console.log(e.target);
                     setEditedValues({
                       ...editedValues,
-                      report: e.target.value,
+                      report: e.target.value
                     });
                   }}
-                  value={editedValues.report || ""}
+                  value={editedValues.report || ''}
                   rows={5}
                   cols={60}
                   required
@@ -127,15 +123,13 @@ export const EditPostModal = ({ show, post, close }: EditPostModal) => {
               </ModalLabel>
               <div className="flex justify-between">
                 <ModalSubmitButton type="submit">Submit</ModalSubmitButton>
-                <ModalCloseButton onClick={() => close()}>
-                  Close
-                </ModalCloseButton>
+                <ModalCloseButton onClick={() => close()}>Close</ModalCloseButton>
               </div>
             </ModalForm>
           </ModalContent>
         </ModalWrapper>
       ) : null}
     </>,
-    document.getElementById("root")!
+    document.getElementById('root')!
   );
 };

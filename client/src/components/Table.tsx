@@ -1,10 +1,5 @@
-import {
-  CellData,
-  MappedWeeklyData,
-  UserCosts,
-  UserHours,
-} from "../pages/Tables";
-import { TableCell, TableHeading } from "../styles/table";
+import { CellData, MappedWeeklyData, UserCosts, UserHours } from '../pages/Tables';
+import { TableCell, TableHeading } from '../styles/table';
 
 type TableProps = {
   tableProps: {
@@ -37,9 +32,7 @@ const Table = (props: TableProps) => {
             <TableCell>{name}</TableCell>
 
             {days.map((day: string) => {
-              const cellData = weeklyData[day].find(
-                (item: CellData) => item.name === name
-              );
+              const cellData = weeklyData[day].find((item: CellData) => item.name === name);
 
               return (
                 <TableCell key={`${name}-${day}`}>

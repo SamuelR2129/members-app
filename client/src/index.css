@@ -4,19 +4,21 @@
 
 body,
 html {
-  font-family: "Roboto", "sans-serif";
+  font-family: 'Roboto', 'sans-serif';
+  padding: 0;
+  margin: 0;
 }
 
 h1,
 h2 {
-  font-family: "Domine";
+  font-family: 'Domine';
   color: rgb(1, 1, 85);
 }
 
 @layer base {
-  input[type="number"]::-webkit-outer-spin-button,
-  input[type="number"]::-webkit-inner-spin-button,
-  input[type="number"] {
+  input[type='number']::-webkit-outer-spin-button,
+  input[type='number']::-webkit-inner-spin-button,
+  input[type='number'] {
     -webkit-appearance: none;
     margin: 0;
     -moz-appearance: textfield !important;

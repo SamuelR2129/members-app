@@ -1,6 +1,6 @@
-import Table from "../components/Table";
-import "../styles/table.css";
-import useSWR from "swr";
+import Table from '../components/Table';
+import '../styles/table.css';
+import useSWR from 'swr';
 
 export type CellData = {
   _id: string;
@@ -32,9 +32,7 @@ type TableData = {
   overallHours: UserHours;
 };
 
-const isFetchTableDataValid = (
-  unknownData: unknown
-): unknownData is TableData[] => {
+const isFetchTableDataValid = (unknownData: unknown): unknownData is TableData[] => {
   const dataFromDB = unknownData as TableData[];
   return dataFromDB !== undefined && Array.isArray(dataFromDB);
 };
@@ -60,7 +58,7 @@ const Tables = () => {
       totalHours: tableData.overallHours,
       totalCosts: tableData.overallCosts,
       days,
-      names,
+      names
     };
   });
 

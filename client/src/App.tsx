@@ -1,10 +1,10 @@
-import { Routes, Route, useLocation } from "react-router-dom";
-import MainPage from "./pages/MainPage";
-import Tables from "./pages/Tables";
-import Contractors from "./pages/Contractors";
-import Navbar from "./components/Navbar";
-import { SWRConfig } from "swr";
-import axios from "axios";
+import { Routes, Route, useLocation } from 'react-router-dom';
+import MainPage from './pages/MainPage';
+import Tables from './pages/Tables';
+import Contractors from './pages/Contractors';
+import Navbar from './components/Navbar';
+import { SWRConfig } from 'swr';
+import axios from 'axios';
 
 function App() {
   const location = useLocation();
@@ -12,9 +12,8 @@ function App() {
   return (
     <SWRConfig
       value={{
-        fetcher: (url: string) => axios.get(url).then((res) => res.data),
-      }}
-    >
+        fetcher: (url: string) => axios.get(url).then((res) => res.data)
+      }}>
       <Navbar />
       <Routes location={previousLocation || location}>
         <Route path="/" element={<MainPage />} />

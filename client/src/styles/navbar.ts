@@ -1,5 +1,5 @@
-import { NavLink as Link } from "react-router-dom";
-import tw from "tailwind-styled-components";
+import { NavLink as Link } from 'react-router-dom';
+import tw from 'tailwind-styled-components';
 
 export const NavContainer = tw.div`
   flex 

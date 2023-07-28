@@ -1,9 +1,8 @@
-import { ChangeEvent, FormEvent, useReducer, useState } from "react";
-import { useRecoilState } from "recoil";
-import { feedState } from "../atom/feedAtom";
-import { CSSTransition } from "react-transition-group";
-import { createPortal } from "react-dom";
-import { PostState } from "../types";
+import { useState } from 'react';
+import { useRecoilState } from 'recoil';
+import { feedState } from '../atom/feedAtom';
+import { createPortal } from 'react-dom';
+import { PostState } from '../types';
 import {
   ModalBody,
   ModalCloseButton,
@@ -14,9 +13,10 @@ import {
   ModalSelect,
   ModalSubmitButton,
   ModalTextarea,
-  ModalWrapper,
-} from "../styles/addPostModal";
-import axios from "axios";
+  ModalWrapper
+} from '../styles/addPostModal';
+import axios from 'axios';
+import { useForm, SubmitHandler } from 'react-hook-form';
 
 type FormProps = {
   show: boolean;
@@ -30,6 +30,25 @@ type AddPostModalData = {
   report: string;
   buildSite: string;
   images: File[] | File;
+};
+
+const convertToFormData = (data: AddPostModalData) => {
+  const formData = new FormData();
+
+  Object.keys(data).forEach((key) => {
+    if (key === 'images') {
+      // Handle images separately to be found in req.files
+      const imageFiles = data[key as keyof typeof data] as File[];
+      for (const imageFile of imageFiles) {
+        formData.append('images', imageFile);
+      }
+    } else {
+      // For other form fields
+      formData.append(key, data[key as keyof typeof data] as string);
+    }
+  });
+
+  return formData;
 };
 
 const addPostResponseIsValid = (
@@ -50,71 +69,30 @@ const addPostResponseIsValid = (
   );
 };
 
-const formReducer = (state: any, event: any) => {
-  if (event.reset) {
-    return {
-      name: "",
-      hours: 0,
-      costs: 0,
-      report: "",
-      buildSite: "",
-      images: "",
-    };
-  }
-  return {
-    ...state,
-    [event.name]: event.value,
-  };
-};
-
-const convertToFormData = (formData: AddPostModalData): FormData => {
-  const data: AddPostModalData = {
-    name: formData.name,
-    hours: formData.hours,
-    costs: formData.costs,
-    report: formData.report,
-    buildSite: formData.buildSite,
-    images: formData.images || [],
-  };
-
-  const formBody = new FormData();
-
-  Object.keys(data).forEach((key) => {
-    if (key === "images") {
-      // Handle images separately to be found in req.files
-      const imageFiles = data[key as keyof typeof data] as File[];
-      for (const imageFile of imageFiles) {
-        formBody.append("images", imageFile);
-      }
-    } else {
-      // For other form fields
-      formBody.append(key, data[key as keyof typeof data] as string);
-    }
-  });
-
-  return formBody;
-};
-
 const AddPostModal = (props: FormProps) => {
   const [submitting, setSubmitting] = useState(false);
-  const [formData, setFormData] = useReducer(formReducer, {});
-  const [inputKey, setInputKey] = useState(Date.now());
   const [globalFeed, setGlobalFeed] = useRecoilState(feedState);
+  const {
+    register,
+    handleSubmit,
+    reset,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    formState: { errors }
+  } = useForm<AddPostModalData>();
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const onSubmit: SubmitHandler<AddPostModalData> = async (data) => {
+    const formData = convertToFormData(data);
+
     setSubmitting(true);
 
     try {
-      const formBody = convertToFormData(formData);
-
       const response = await axios.post<PostState>(
         `${process.env.REACT_APP_SERVER_URL}/posts/makepost`,
-        formBody,
+        formData,
         {
           headers: {
-            "Content-Type": "multipart/form-data",
-          },
+            'Content-Type': 'multipart/form-data'
+          }
         }
       );
 
@@ -122,156 +100,107 @@ const AddPostModal = (props: FormProps) => {
         console.error(response);
         throw new Error(`Response from makepost server is not correct`);
       }
-
+      // eslint-disable-next-line no-debugger
+      debugger;
       setGlobalFeed([response.data.data, ...globalFeed]);
 
-      // resets the text based inputs
-      setFormData({
-        reset: true,
-      });
-      //resets the image input
-      setInputKey(Date.now());
+      reset();
 
       setSubmitting(false);
 
-      alert("Post was successful!");
+      alert('Post was successful!');
 
       props.onClose();
     } catch (err) {
-      console.error("System Error Submitting Post: ", err);
-      alert("There has been an error submitting your post");
-      setFormData({
-        reset: true,
-      });
-      setInputKey(Date.now());
+      console.error('System Error Submitting Post: ', err);
+      alert('There has been an error submitting your post');
       setSubmitting(false);
     }
   };
 
-  const handleChange = (
-    event: ChangeEvent<
-      HTMLSelectElement | HTMLInputElement | HTMLTextAreaElement
-    >
-  ) => {
-    setFormData({
-      name: event.target.name,
-      value: event.target.value,
-    });
-  };
-
-  const onImageChange = (event: ChangeEvent<HTMLInputElement>) => {
-    if (!event.target.files) return;
-    setFormData({
-      name: event.target.name,
-      value: event.target.files,
-    });
-  };
-
   return createPortal(
-    <CSSTransition
-      in={props.show}
-      unmountOnExit
-      timeout={{ enter: 0, exit: 300 }}
-    >
-      <ModalWrapper onClick={() => props.onClose()}>
-        <ModalContent onClick={(e) => e.stopPropagation()}>
-          <ModalHeaderFooter>
-            <h2 className="m-0">Make a post</h2>
-          </ModalHeaderFooter>
-          {submitting && <div>Submitting Form...</div>}
+    <ModalWrapper onClick={() => props.onClose()}>
+      <ModalContent onClick={(e) => e.stopPropagation()}>
+        <ModalHeaderFooter>
+          <h2 className="m-0">Make a post</h2>
+        </ModalHeaderFooter>
+        {submitting && <div>Submitting Form...</div>}
 
-          <form onSubmit={handleSubmit}>
-            <ModalBody>
-              <fieldset disabled={submitting}>
-                <ModalLabel>
-                  <p>Name:</p>
-                  <ModalSelect
-                    name="name"
-                    onChange={handleChange}
-                    value={formData.name || ""}
-                    required
-                  >
-                    <option value="">--Please choose an option--</option>
-                    <option value="Elliott">Elliott</option>
-                    <option value="Pierce">Pierce</option>
-                    <option value="Sam">Sam</option>
-                  </ModalSelect>
-                </ModalLabel>
-                <ModalLabel>
-                  <p>Choose a site:</p>
-                  <ModalSelect
-                    name="buildSite"
-                    onChange={handleChange}
-                    value={formData.buildSite || ""}
-                    required
-                  >
-                    <option value="">--Please choose an option--</option>
-                    <option value="7 Rose Street">7 Rose Street</option>
-                    <option value="NIB">NIB</option>
-                    <option value="11 Beach Street">11 Beach Street</option>
-                  </ModalSelect>
-                </ModalLabel>
-                <ModalLabel>
-                  <p>Hours</p>
-                  <ModalInput
-                    type="number"
-                    step="0.01"
-                    name="hours"
-                    value={formData.hours || ""}
-                    onChange={handleChange}
-                    required
-                    placeholder="e.g 8, 8.75"
-                  />
-                </ModalLabel>
-                <ModalLabel>
-                  <p>Costs</p>
-                  <ModalInput
-                    type="number"
-                    step="0.01"
-                    name="costs"
-                    value={formData.costs || ""}
-                    onChange={handleChange}
-                    required
-                    placeholder="e.g 324, 324.25"
-                  />
-                </ModalLabel>
-                <ModalLabel>
-                  <p>Report:</p>
-                  <ModalTextarea
-                    name="report"
-                    value={formData.report || ""}
-                    onChange={handleChange}
-                    rows={5}
-                    cols={60}
-                    required
-                  />
-                </ModalLabel>
-                <ModalLabel>
-                  <p>Add Image:</p>
-                  <input
-                    type="file"
-                    name="images"
-                    className="imageInput"
-                    onChange={onImageChange}
-                    key={inputKey}
-                    multiple
-                  />
-                </ModalLabel>
-              </fieldset>
-            </ModalBody>
-            <ModalHeaderFooter>
-              <ModalSubmitButton type="submit" disabled={submitting}>
-                Submit
-              </ModalSubmitButton>
-              <ModalCloseButton onClick={() => props.onClose()}>
-                Close
-              </ModalCloseButton>
-            </ModalHeaderFooter>
-          </form>
-        </ModalContent>
-      </ModalWrapper>
-    </CSSTransition>,
-    document.getElementById("root")!
+        <form onSubmit={handleSubmit(onSubmit)} encType="multipart/form-data">
+          <ModalBody>
+            <fieldset disabled={submitting}>
+              <ModalLabel>
+                <p>Name:</p>
+                <ModalSelect {...register('name', { required: 'You must select a name' })}>
+                  <option value="">--Please choose an option--</option>
+                  <option value="Elliott">Elliott</option>
+                  <option value="Pierce">Pierce</option>
+                  <option value="Sam">Sam</option>
+                </ModalSelect>
+              </ModalLabel>
+              <ModalLabel>
+                <p>Choose a site:</p>
+                <ModalSelect
+                  {...register('buildSite', { required: 'You must select a build site' })}>
+                  <option value="">--Please choose an option--</option>
+                  <option value="7 Rose Street">7 Rose Street</option>
+                  <option value="NIB">NIB</option>
+                  <option value="11 Beach Street">11 Beach Street</option>
+                </ModalSelect>
+              </ModalLabel>
+              <ModalLabel>
+                <p>Hours</p>
+                <ModalInput
+                  type="number"
+                  step="0.01"
+                  {...register('hours', {
+                    valueAsNumber: true,
+                    required: 'You must add your hours'
+                  })}
+                  placeholder="e.g 8, 8.75"
+                />
+              </ModalLabel>
+              <ModalLabel>
+                <p>Costs</p>
+                <ModalInput
+                  type="number"
+                  step="0.01"
+                  {...register('costs', {
+                    valueAsNumber: true,
+                    required: 'You must add your costs'
+                  })}
+                  placeholder="e.g 324, 324.25"
+                />
+              </ModalLabel>
+              <ModalLabel>
+                <p>Report:</p>
+                <ModalTextarea
+                  {...register('report', { required: 'Please provide a report of the day' })}
+                  rows={5}
+                  cols={60}
+                />
+              </ModalLabel>
+              <ModalLabel>
+                <p>Add Image:</p>
+                <input type="file" {...register('images')} multiple />
+              </ModalLabel>
+            </fieldset>
+          </ModalBody>
+          <ModalHeaderFooter>
+            <ModalSubmitButton type="submit" disabled={submitting}>
+              Submit
+            </ModalSubmitButton>
+            <ModalCloseButton
+              onClick={() => {
+                props.onClose();
+              }}>
+              Close
+            </ModalCloseButton>
+          </ModalHeaderFooter>
+        </form>
+      </ModalContent>
+    </ModalWrapper>,
+    document.getElementById('root')!
   );
 };
 

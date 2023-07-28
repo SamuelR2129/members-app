@@ -1,8 +1,7 @@
-import { atom } from "recoil";
-import { PostState } from "../types";
-import { EditFormValues } from "../components/Post";
+import { atom } from 'recoil';
+import { PostState } from '../types';
 
 export const feedState = atom({
-  key: "feedState",
-  default: [] as PostState[],
+  key: 'feedState',
+  default: [] as PostState[]
 });

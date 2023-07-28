@@ -1,8 +1,8 @@
-import { useRecoilState } from "recoil";
-import { feedState } from "../atom/feedAtom";
-import { PostState } from "../types";
-import { pulsePostCardToggle, restructureDateTime } from "./utils";
-import axios from "axios";
+import { useRecoilState } from 'recoil';
+import { feedState } from '../atom/feedAtom';
+import { PostState } from '../types';
+import { pulsePostCardToggle, restructureDateTime } from './utils';
+import axios from 'axios';
 import {
   PostName,
   PostBuildSite,
@@ -12,10 +12,10 @@ import {
   EditButton,
   PostWrapper,
   DeleteButton,
-  PostTimeCreated,
-} from "../styles/post";
-import { useState } from "react";
-import { EditPostModal } from "./EditPostModal";
+  PostTimeCreated
+} from '../styles/post';
+import { useState } from 'react';
+import { EditPostModal } from './EditPostModal';
 
 type PostType = {
   post: {
@@ -35,10 +35,7 @@ export type EditFormValues = {
   buildSite: string;
 };
 
-const removeStatePostById = (
-  feed: PostState[],
-  _idToRemove: string
-): PostState[] => {
+const removeStatePostById = (feed: PostState[], _idToRemove: string): PostState[] => {
   const newArray = feed.filter((post) => post._id !== _idToRemove);
   return newArray;
 };
@@ -59,17 +56,15 @@ const Post = ({ post }: PostType) => {
     if (!response) {
       pulsePostCardToggle();
 
-      alert("There was an issue removing the post, try again!");
+      alert('There was an issue removing the post, try again!');
 
-      throw new Error(
-        `This is an HTTP error deleting your post: The status is ${response}`
-      );
+      throw new Error(`This is an HTTP error deleting your post: The status is ${response}`);
     }
 
     const newFeed = removeStatePostById(globalFeed, post._id);
     setGlobalFeed(newFeed);
     pulsePostCardToggle();
-    alert("Post was deleted!");
+    alert('Post was deleted!');
   };
 
   return (
@@ -81,9 +76,7 @@ const Post = ({ post }: PostType) => {
       <PostReport>{post.report}</PostReport>
       <ImageWrapper>
         {post.imageUrls &&
-          post.imageUrls.map((url, index) => (
-            <PostImage key={index} alt="Feed" src={url} />
-          ))}
+          post.imageUrls.map((url, index) => <PostImage key={index} alt="Feed" src={url} />)}
       </ImageWrapper>
 
       <div className="flex justify-between w-full mt-4 mb-7">

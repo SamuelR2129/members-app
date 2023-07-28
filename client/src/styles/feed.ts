@@ -1,4 +1,4 @@
-import tw from "tailwind-styled-components";
+import tw from 'tailwind-styled-components';
 
 export const SiteFilter = tw.div`
   p-4 bg-gray-200 rounded-lg mb-5

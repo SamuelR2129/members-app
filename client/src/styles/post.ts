@@ -1,4 +1,4 @@
-import tw from "tailwind-styled-components";
+import tw from 'tailwind-styled-components';
 
 export const Button = tw.button`
   mr-2 px-4 py-2 text-white rounded hover:bg-opacity-75

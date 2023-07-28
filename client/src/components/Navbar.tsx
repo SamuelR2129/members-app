@@ -1,4 +1,4 @@
-import { NavContainer, NavItem, NavList, NavLink } from "../styles/navbar";
+import { NavContainer, NavItem, NavList, NavLink } from '../styles/navbar';
 
 const Navbar = () => {
   return (
