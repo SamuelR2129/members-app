@@ -8,7 +8,6 @@ import {
   PostBuildSite,
   PostReport,
   ImageWrapper,
-  PostImage,
   EditButton,
   PostWrapper,
   DeleteButton,
@@ -16,6 +15,10 @@ import {
 } from '../styles/post';
 import { useState } from 'react';
 import { EditPostModal } from './EditPostModal';
+import 'swiper/css';
+import 'swiper/css/navigation';
+import Swiper from 'swiper';
+import { Navigation, Pagination } from 'swiper/modules';
 
 type PostType = {
   post: {
@@ -43,6 +46,11 @@ const removeStatePostById = (feed: PostState[], _idToRemove: string): PostState[
 const Post = ({ post }: PostType) => {
   const [globalFeed, setGlobalFeed] = useRecoilState(feedState);
   const [modal, setModal] = useState(false);
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const swiper = new Swiper('.swiper', {
+    modules: [Navigation, Pagination]
+  });
 
   const timeAndDateCreated = restructureDateTime(post.createdAt);
 
@@ -75,8 +83,17 @@ const Post = ({ post }: PostType) => {
       <PostTimeCreated>{timeAndDateCreated}</PostTimeCreated>
       <PostReport>{post.report}</PostReport>
       <ImageWrapper>
-        {post.imageUrls &&
-          post.imageUrls.map((url, index) => <PostImage key={index} alt="Feed" src={url} />)}
+        <div className="swiper">
+          <div className="swiper-wrapper">
+            {post.imageUrls.length &&
+              post.imageUrls.map((imageUrl: string | undefined, index: number) => (
+                <div className="swiper-slide" key={`${index}`}>
+                  <img src={imageUrl} loading="lazy" />
+                  <div className="swiper-lazy-preloader"></div>
+                </div>
+              ))}
+          </div>
+        </div>
       </ImageWrapper>
 
       <div className="flex justify-between w-full mt-4 mb-7">

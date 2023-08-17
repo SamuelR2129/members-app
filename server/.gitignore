@@ -28,3 +28,8 @@ yarn-error.log*
 cdk.out
 
 aws/dist
+
+.aws-sam/
+packaged.yaml
+samconfig.toml
+*.db
