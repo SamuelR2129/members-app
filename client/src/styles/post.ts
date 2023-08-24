@@ -22,6 +22,7 @@ export const PostWrapper = tw.div`
   @media (max-width: 767px) {
     // Styles for mobile
     p-2
+    overflow-hidden
   }
 `;
 
@@ -51,8 +52,4 @@ export const PostImage = tw.img`
     // Styles for mobile
     w-full
   }
-`;
-
-export const ImageWrapper = tw.div`
-  flex flex-wrap
 `;

@@ -10,17 +10,19 @@ function App() {
   const location = useLocation();
   const previousLocation = location.state?.previousLocation;
   return (
-    <SWRConfig
-      value={{
-        fetcher: (url: string) => axios.get(url).then((res) => res.data)
-      }}>
-      <Navbar />
-      <Routes location={previousLocation || location}>
-        <Route path="/" element={<MainPage />} />
-        <Route path="/tables" element={<Tables />} />
-        <Route path="/contractors" element={<Contractors />} />
-      </Routes>
-    </SWRConfig>
+    <>
+      <SWRConfig
+        value={{
+          fetcher: (url: string) => axios.get(url).then((res) => res.data)
+        }}>
+        <Navbar />
+        <Routes location={previousLocation || location}>
+          <Route path="/" element={<MainPage />} />
+          <Route path="/tables" element={<Tables />} />
+          <Route path="/contractors" element={<Contractors />} />
+        </Routes>
+      </SWRConfig>
+    </>
   );
 }
 

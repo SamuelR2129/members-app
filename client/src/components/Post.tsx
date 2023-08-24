@@ -7,7 +7,6 @@ import {
   PostName,
   PostBuildSite,
   PostReport,
-  ImageWrapper,
   EditButton,
   PostWrapper,
   DeleteButton,
@@ -15,10 +14,7 @@ import {
 } from '../styles/post';
 import { useState } from 'react';
 import { EditPostModal } from './EditPostModal';
-import 'swiper/css';
-import 'swiper/css/navigation';
-import Swiper from 'swiper';
-import { Navigation, Pagination } from 'swiper/modules';
+import ImageCarousel from './ImageCarousel';
 
 type PostType = {
   post: {
@@ -47,11 +43,6 @@ const Post = ({ post }: PostType) => {
   const [globalFeed, setGlobalFeed] = useRecoilState(feedState);
   const [modal, setModal] = useState(false);
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const swiper = new Swiper('.swiper', {
-    modules: [Navigation, Pagination]
-  });
-
   const timeAndDateCreated = restructureDateTime(post.createdAt);
 
   const toggle = () => setModal(!modal);
@@ -74,6 +65,9 @@ const Post = ({ post }: PostType) => {
     pulsePostCardToggle();
     alert('Post was deleted!');
   };
+  /*          post.imageUrls.map((imageUrl: string | undefined, index: number) => (
+            <img src={imageUrl} key={index} />
+          ))*/
 
   return (
     <PostWrapper id="post-wrapper">
@@ -82,19 +76,7 @@ const Post = ({ post }: PostType) => {
       <PostBuildSite>{post.buildSite}</PostBuildSite>
       <PostTimeCreated>{timeAndDateCreated}</PostTimeCreated>
       <PostReport>{post.report}</PostReport>
-      <ImageWrapper>
-        <div className="swiper">
-          <div className="swiper-wrapper">
-            {post.imageUrls.length &&
-              post.imageUrls.map((imageUrl: string | undefined, index: number) => (
-                <div className="swiper-slide" key={`${index}`}>
-                  <img src={imageUrl} loading="lazy" />
-                  <div className="swiper-lazy-preloader"></div>
-                </div>
-              ))}
-          </div>
-        </div>
-      </ImageWrapper>
+      {post.imageUrls && <ImageCarousel imageUrlArray={post.imageUrls} />}
 
       <div className="flex justify-between w-full mt-4 mb-7">
         <EditButton onClick={() => toggle()}>Edit</EditButton>

@@ -1,19 +1,19 @@
-import * as dotenv from "dotenv";
-import express, { Request } from "express";
-import cors from "cors";
-import helmet from "helmet";
-import { postsRouter } from "./routes/posts.router";
-import { tableRouter } from "./routes/tableData.router";
-import { errorHandler } from "./middleware/error.middleware";
-import { notFoundHandler } from "./middleware/not-found.middleware";
-import connectDB from "./common/database";
+import * as dotenv from 'dotenv';
+import express, { Request } from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import { postsRouter } from './routes/posts.router';
+import { tableRouter } from './routes/tableData.router';
+import { errorHandler } from './middleware/error.middleware';
+import { notFoundHandler } from './middleware/not-found.middleware';
+import connectDB from './common/database';
 
 dotenv.config();
 
 //App Variables
 if (!process.env.PORT) {
-  console.error("PORT variable is null or undefined");
-  process.exit(1);
+    console.error('PORT variable is null or undefined');
+    process.exit(1);
 }
 
 connectDB();
@@ -26,15 +26,15 @@ const app = express();
 app.use(express.json());
 app.use(helmet());
 app.use(
-  cors({
-    origin: "http://localhost:3000",
-    allowedHeaders: "Origin,X-Requested-With,Content-Type,Accept",
-  })
+    cors({
+        origin: 'http://localhost:3000',
+        allowedHeaders: 'Origin,X-Requested-With,Content-Type,Accept',
+    }),
 );
 app.use(express.urlencoded({ extended: true }));
-app.use("/uploads", express.static(__dirname + "/uploads"));
-app.use("/posts", postsRouter);
-app.use("/table-data", tableRouter);
+app.use('/uploads', express.static(__dirname + '/uploads'));
+app.use('/posts', postsRouter);
+app.use('/table-data', tableRouter);
 
 //Error Handlers
 
@@ -44,5 +44,5 @@ app.use(notFoundHandler);
 //Server Activation
 
 app.listen(PORT, () => {
-  console.log(`Listening on port ${PORT}`);
+    console.log(`Listening on port ${PORT}`);
 });

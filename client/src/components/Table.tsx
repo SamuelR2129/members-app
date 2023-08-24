@@ -32,7 +32,8 @@ const Table = (props: TableProps) => {
             <TableCell>{name}</TableCell>
 
             {days.map((day: string) => {
-              const cellData = weeklyData[day].find((item: CellData) => item.name === name);
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const cellData = (weeklyData as any).find((item: CellData) => item.name === name);
 
               return (
                 <TableCell key={`${name}-${day}`}>
