@@ -16,6 +16,9 @@ Globals:
         Environment:
             Variables:
                 REGION_NAME: 'ap-southeast-2'
+                DYNAMO_TABLE: !Ref PostsDynamoDbTable
+                DYNAMO_TABLE_NAME: 'post-tables'
+                S3_BUCKET_NAME: 's3-lambda-stack-srcbucket-dpcaitz3x0hb'
 Resources:
     S3ImageUploaderFunction:
         Type: AWS::Serverless::Function
@@ -29,12 +32,68 @@ Resources:
                       Resource: '*'
             Events:
                 S3ImageUploaderFunctionEvents:
-                    Type: S3
+                    Type: Api
                     Properties:
-                        Bucket: !Ref SrcBucket
-                        Events: s3:ObjectCreated:*
+                        Path: /uploadImageToS3
+                        Method: POST
+
+    UploadPostToDynamo:
+        Type: AWS::Serverless::Function
+        Properties:
+            Policies:
+                - DynamoDBCrudPolicy:
+                    TableName: !Ref PostsDynamoDbTable
+            Handler: app.save_post_to_dynamodb
+            Events:
+                UploadPostToDynamoEvents:
+                    Type: Api
+                    Properties:
+                        Path: /uploadPostToDynamo
+                        Method: POST
+
+    GetPostsFromDynamo:
+        Type: AWS::Serverless::Function
+        Properties:
+            Policies:
+                - DynamoDBCrudPolicy:
+                    TableName: !Ref PostsDynamoDbTable
+            Handler: app.get_posts_from_dynamodb
+            Events:
+                UploadPostToDynamoEvents:
+                    Type: Api
+                    Properties:
+                        Path: /getPostsFromDynamodb
+                        Method: GET
+    
+    GetImageFromS3:
+        Type: AWS::Serverless::Function
+        Properties:
+            Policies:
+                - DynamoDBReadPolicy:
+                    TableName: !Ref PostsDynamoDbTable
+            Handler: app.s3_get_image
+            Events:
+                GetImageFromS3Events:
+                    Type: Api
+                    Properties:
+                        Path: /images/{id}
+                        Method: GET
     SrcBucket:
         Type: AWS::S3::Bucket
+
+    PostsDynamoDbTable:
+        Type: AWS::DynamoDB::Table
+        Properties:
+            AttributeDefinitions:
+                - AttributeName: id
+                  AttributeType: S
+            KeySchema:
+                - AttributeName: id
+                  KeyType: HASH
+            ProvisionedThroughput:
+                ReadCapacityUnits: 5
+                WriteCapacityUnits: 5
+            TableName: 'post-tables'
 # Outputs:
 #     # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
 #     # Find out more about other implicit resources you can reference within SAM
