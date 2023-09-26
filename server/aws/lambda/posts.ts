@@ -1,10 +1,11 @@
 import { APIGatewayProxyResult, APIGatewayProxyEvent } from 'aws-lambda';
 import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { DeleteItemCommand, DynamoDBClient, UpdateItemCommand } from '@aws-sdk/client-dynamodb';
 import { PutCommand, DynamoDBDocumentClient, ScanCommand } from '@aws-sdk/lib-dynamodb';
 import { v4 as uuidv4 } from 'uuid';
 import { DynamoDb } from '../../types';
+import { utcToZonedTime } from 'date-fns-tz';
 
 interface DynamoPost {
     name: string;
@@ -22,9 +23,26 @@ type BodyImage = {
     mimeType: string;
 };
 
+type UpdateBody = {
+    id: string;
+    buildSite: string;
+    report: string;
+};
+
 export const isPostsFromDBValid = (unknownData: DynamoDb | unknown): unknownData is DynamoDb => {
     const postsFromDB = unknownData as DynamoDb;
     return postsFromDB && postsFromDB.Items !== undefined && Array.isArray(postsFromDB.Items);
+};
+
+export const isPostBodyValid = (unknown: unknown): unknown is DynamoPost => {
+    const body = unknown as DynamoPost;
+    return (
+        body &&
+        body.name !== undefined &&
+        body.costs !== undefined &&
+        body.hours !== undefined &&
+        body.report !== undefined
+    );
 };
 
 const validDecodedImage = (unknown: unknown): unknown is BodyImage => {
@@ -105,6 +123,10 @@ export const save_post_to_dynamodb = async (event: APIGatewayProxyEvent) => {
 
         const body = event.body ? JSON.parse(event.body) : undefined;
 
+        if (!isPostBodyValid(body)) {
+            throw new Error('The body to create a post is missing information');
+        }
+
         const command = new PutCommand({
             TableName: process.env.DYNAMO_TABLE_NAME,
             Item: {
@@ -114,8 +136,9 @@ export const save_post_to_dynamodb = async (event: APIGatewayProxyEvent) => {
                 costs: body.costs,
                 report: body.report,
                 buildSite: body.buildSite,
-                imageNames: body.imageNames,
-                imageUrls: body.imageUrls,
+                imageNames: body.imageNames || [],
+                imageUrls: body.imageUrls || [],
+                createdAt: utcToZonedTime(new Date(), 'Australia/Sydney').toISOString(),
             },
         });
 
@@ -168,6 +191,80 @@ export const get_posts_from_dynamodb = async (event: APIGatewayProxyEvent) => {
         return {
             statusCode: 500,
             body: JSON.stringify({ message: 'There was an error getting posts from dynamodb' }),
+        };
+    }
+};
+
+export const delete_post_from_dynamodb = async (event: APIGatewayProxyEvent) => {
+    console.log('Starting delete post from dynamodb');
+    try {
+        const postId = event.pathParameters?.id;
+
+        if (!postId) {
+            throw new Error('Id is missing from path');
+        }
+        const params = {
+            TableName: process.env.DYNAMO_TABLE_NAME,
+            Key: { id: { S: postId } },
+        };
+
+        const command = new DeleteItemCommand(params);
+        const response = await client.send(command);
+
+        if (response.$metadata.httpStatusCode !== 200) {
+            throw new Error(`There was an issue deleting the post statusCode:${response.$metadata.httpStatusCode}`);
+        }
+
+        return {
+            statusCode: 200,
+            body: JSON.stringify(response),
+        };
+    } catch (err) {
+        console.error('Error:', err);
+        return {
+            statusCode: 500,
+            body: JSON.stringify({ message: 'There was an error deleting posts from dynamodb' }),
+        };
+    }
+};
+
+export const update_post_in_dynamodb = async (event: APIGatewayProxyEvent) => {
+    console.log('Starting update post in dynamodb');
+    try {
+        const data: UpdateBody = event.body && JSON.parse(event.body);
+
+        if (!data.report || !data.buildSite || !event.pathParameters?.id) {
+            throw new Error(
+                `Value missing to update id: ${data.id} buildSite: ${data.buildSite} report: ${data.report} `,
+            );
+        }
+        const params = {
+            TableName: process.env.DYNAMO_TABLE_NAME,
+            Key: { id: { S: event.pathParameters.id } },
+            UpdateExpression: 'SET report = :report, buildSite = :buildSite',
+            ExpressionAttributeValues: {
+                ':report': { S: data.report },
+                ':buildSite': { S: data.buildSite },
+            },
+            ReturnValues: 'ALL_NEW',
+        };
+
+        const command = new UpdateItemCommand(params);
+        const response = await client.send(command);
+
+        if (response.$metadata.httpStatusCode !== 200) {
+            throw new Error(`There was an issue updating the post statusCode:${response.$metadata.httpStatusCode}`);
+        }
+
+        return {
+            statusCode: 200,
+            body: JSON.stringify(response),
+        };
+    } catch (err) {
+        console.error('Error:', err);
+        return {
+            statusCode: 500,
+            body: JSON.stringify({ message: 'There was an error updating post in dynamodb' }),
         };
     }
 };

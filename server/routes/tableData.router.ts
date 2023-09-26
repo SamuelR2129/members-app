@@ -1,291 +1,271 @@
-import express from "express";
-import posts from "../interfaces/post.interface";
+import express from 'express';
+import posts from '../interfaces/post.interface';
 
 export const tableRouter = express.Router();
 
 export type tableDataFromDB = {
-  _id: string;
-  name: string;
-  createdAt: Date;
-  costs: string | number;
-  hours: string | number;
+    _id: string;
+    name: string;
+    createdAt: Date;
+    costs: string | number;
+    hours: string | number;
 };
 
 export type DataMappedToDay = {
-  monday: tableDataFromDB[];
-  tuesday: tableDataFromDB[];
-  wednesday: tableDataFromDB[];
-  thursday: tableDataFromDB[];
-  friday: tableDataFromDB[];
-  saturday: tableDataFromDB[];
-  sunday: tableDataFromDB[];
+    monday: tableDataFromDB[];
+    tuesday: tableDataFromDB[];
+    wednesday: tableDataFromDB[];
+    thursday: tableDataFromDB[];
+    friday: tableDataFromDB[];
+    saturday: tableDataFromDB[];
+    sunday: tableDataFromDB[];
 };
 
 export type UserCosts = {
-  [key: string]: {
-    costs: number;
-  };
+    [key: string]: {
+        costs: number;
+    };
 };
 
 export type UserHours = {
-  [key: string]: {
-    hours: number;
-  };
+    [key: string]: {
+        hours: number;
+    };
 };
 
 export type WeeklyMappedData = {
-  weeklyData: DataMappedToDay;
-  overallCosts: UserCosts;
-  overallHours: UserHours;
+    weeklyData: DataMappedToDay;
+    overallCosts: UserCosts;
+    overallHours: UserHours;
 };
 
-const isTableDataValid = (
-  unknownData: tableDataFromDB[] | unknown
-): unknownData is tableDataFromDB[] => {
-  const postsFromDB = unknownData as tableDataFromDB[];
-  return (
-    Array.isArray(postsFromDB) &&
-    typeof postsFromDB[0]._id &&
-    typeof postsFromDB[0].createdAt &&
-    typeof postsFromDB[0].name === "string" &&
-    typeof postsFromDB[0].costs === "string" &&
-    typeof postsFromDB[0].hours === "string"
-  );
+const isTableDataValid = (unknownData: tableDataFromDB[] | unknown): unknownData is tableDataFromDB[] => {
+    const postsFromDB = unknownData as tableDataFromDB[];
+    return (
+        Array.isArray(postsFromDB) &&
+        typeof postsFromDB[0]._id &&
+        typeof postsFromDB[0].createdAt &&
+        typeof postsFromDB[0].name === 'string' &&
+        typeof postsFromDB[0].costs === 'string' &&
+        typeof postsFromDB[0].hours === 'string'
+    );
 };
 
 export const subtractDaysFromWeek = (currentDay: Date) => {
-  const currentDayOfWeek = currentDay.getDay();
-  const daysToSubtract = (currentDayOfWeek + 6) % 7; // Calculate the number of days to subtract inside a 7 day modulo
+    const currentDayOfWeek = currentDay.getDay();
+    const daysToSubtract = (currentDayOfWeek + 6) % 7; // Calculate the number of days to subtract inside a 7 day modulo
 
-  const previousDays = new Date(currentDay);
-  previousDays.setDate(currentDay.getDate() - daysToSubtract);
+    const previousDays = new Date(currentDay);
+    previousDays.setDate(currentDay.getDate() - daysToSubtract);
 
-  const previousDaysAndWeek = new Date(
-    previousDays.getTime() - 7 * 24 * 60 * 60 * 1000
-  );
+    const previousDaysAndWeek = new Date(previousDays.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-  return { previousDaysAndWeek, previousDays };
+    return { previousDaysAndWeek, previousDays };
 };
 
-export const sortDataByWeek = (
-  postData: tableDataFromDB[],
-  previousDays: Date
-) => {
-  const first: tableDataFromDB[] = [];
-  const second: tableDataFromDB[] = [];
+export const sortDataByWeek = (postData: tableDataFromDB[], previousDays: Date) => {
+    const first: tableDataFromDB[] = [];
+    const second: tableDataFromDB[] = [];
 
-  postData.forEach((post) => {
-    const objDate = new Date(post.createdAt);
+    postData.forEach((post) => {
+        const objDate = new Date(post.createdAt);
 
-    if (objDate < previousDays) {
-      first.push(post);
-    } else {
-      second.push(post);
-    }
-  });
+        if (objDate < previousDays) {
+            first.push(post);
+        } else {
+            second.push(post);
+        }
+    });
 
-  return [first, second];
+    return [first, second];
 };
 
 export const sortDataByDay = (data: tableDataFromDB[]): DataMappedToDay => {
-  //Mon: 1, Tues: 2, Wed: 3, Thur: 4, Fri: 5, Sat: 6, Sun: 0
-  let dayGroups: DataMappedToDay = {
-    monday: [],
-    tuesday: [],
-    wednesday: [],
-    thursday: [],
-    friday: [],
-    saturday: [],
-    sunday: [],
-  };
-
-  for (const post of data) {
-    const postDay = post.createdAt.getDay();
-
-    switch (postDay) {
-      case 0:
-        dayGroups.sunday.push(post);
-        break;
-
-      case 1:
-        dayGroups.monday.push(post);
-        break;
-
-      case 2:
-        dayGroups.tuesday.push(post);
-        break;
-
-      case 3:
-        dayGroups.wednesday.push(post);
-        break;
-
-      case 4:
-        dayGroups.thursday.push(post);
-        break;
-
-      case 5:
-        dayGroups.friday.push(post);
-        break;
-
-      case 6:
-        dayGroups.saturday.push(post);
-        break;
-
-      default:
-        throw new Error(
-          "A number that is not a day was given to the tableData switch"
-        );
-    }
-  }
-
-  return dayGroups;
-};
-
-export const addValuesTogether = (
-  postValues: tableDataFromDB[]
-): tableDataFromDB[] => {
-  const duplicatePosts = postValues.map((element) => {
-    const matchingElements = postValues.filter(
-      (el) => el.name === element.name
-    );
-
-    const totalCost = matchingElements.reduce((acc, el) => acc + +el.costs, 0);
-
-    const totalHours = matchingElements.reduce((acc, el) => acc + +el.hours, 0);
-
-    return {
-      _id: element._id,
-      name: element.name,
-      createdAt: element.createdAt,
-      costs: totalCost,
-      hours: totalHours,
+    //Mon: 1, Tues: 2, Wed: 3, Thur: 4, Fri: 5, Sat: 6, Sun: 0
+    const dayGroups: DataMappedToDay = {
+        monday: [],
+        tuesday: [],
+        wednesday: [],
+        thursday: [],
+        friday: [],
+        saturday: [],
+        sunday: [],
     };
-  });
 
-  //remove duplicates created by above algo
-  return duplicatePosts.filter(
-    (post, index) =>
-      duplicatePosts.findIndex((item) => item.name === post.name) === index
-  );
+    for (const post of data) {
+        const postDay = post.createdAt.getDay();
+
+        switch (postDay) {
+            case 0:
+                dayGroups.sunday.push(post);
+                break;
+
+            case 1:
+                dayGroups.monday.push(post);
+                break;
+
+            case 2:
+                dayGroups.tuesday.push(post);
+                break;
+
+            case 3:
+                dayGroups.wednesday.push(post);
+                break;
+
+            case 4:
+                dayGroups.thursday.push(post);
+                break;
+
+            case 5:
+                dayGroups.friday.push(post);
+                break;
+
+            case 6:
+                dayGroups.saturday.push(post);
+                break;
+
+            default:
+                throw new Error('A number that is not a day was given to the tableData switch');
+        }
+    }
+
+    return dayGroups;
 };
 
-export const addDailyUserEntriesTogether = (
-  data: DataMappedToDay
-): DataMappedToDay => {
-  return {
-    monday: addValuesTogether(data.monday),
-    tuesday: addValuesTogether(data.tuesday),
-    wednesday: addValuesTogether(data.wednesday),
-    thursday: addValuesTogether(data.thursday),
-    friday: addValuesTogether(data.friday),
-    saturday: addValuesTogether(data.saturday),
-    sunday: addValuesTogether(data.sunday),
-  };
+export const addValuesTogether = (postValues: tableDataFromDB[]): tableDataFromDB[] => {
+    const duplicatePosts = postValues.map((element) => {
+        const matchingElements = postValues.filter((el) => el.name === element.name);
+
+        const totalCost = matchingElements.reduce((acc, el) => acc + +el.costs, 0);
+
+        const totalHours = matchingElements.reduce((acc, el) => acc + +el.hours, 0);
+
+        return {
+            _id: element._id,
+            name: element.name,
+            createdAt: element.createdAt,
+            costs: totalCost,
+            hours: totalHours,
+        };
+    });
+
+    //remove duplicates created by above algo
+    return duplicatePosts.filter(
+        (post, index) => duplicatePosts.findIndex((item) => item.name === post.name) === index,
+    );
+};
+
+export const addDailyUserEntriesTogether = (data: DataMappedToDay): DataMappedToDay => {
+    return {
+        monday: addValuesTogether(data.monday),
+        tuesday: addValuesTogether(data.tuesday),
+        wednesday: addValuesTogether(data.wednesday),
+        thursday: addValuesTogether(data.thursday),
+        friday: addValuesTogether(data.friday),
+        saturday: addValuesTogether(data.saturday),
+        sunday: addValuesTogether(data.sunday),
+    };
 };
 
 export const addUpHowMuchUserSpent = (data: tableDataFromDB[]): UserCosts => {
-  const finalSums: UserCosts = {};
+    const finalSums: UserCosts = {};
 
-  for (const post of data) {
-    let builtCosts: tableDataFromDB | { name: string; costs: string };
+    for (const post of data) {
+        let builtCosts: tableDataFromDB | { name: string; costs: string };
 
-    if (!post.name) {
-      throw new Error("No name on post when adding up costs");
+        if (!post.name) {
+            throw new Error('No name on post when adding up costs');
+        }
+
+        if (post.costs === '' || !post.costs) {
+            builtCosts = {
+                name: post.name,
+                costs: '0',
+            };
+        } else {
+            builtCosts = post;
+        }
+
+        if (!finalSums[builtCosts.name]) {
+            finalSums[builtCosts.name] = { costs: +builtCosts.costs };
+        } else {
+            finalSums[builtCosts.name].costs = +finalSums[builtCosts.name].costs + +builtCosts.costs;
+        }
     }
-
-    if (post.costs === "" || !post.costs) {
-      builtCosts = {
-        name: post.name,
-        costs: "0",
-      };
-    } else {
-      builtCosts = post;
-    }
-
-    if (!finalSums[builtCosts.name]) {
-      finalSums[builtCosts.name] = { costs: +builtCosts.costs };
-    } else {
-      finalSums[builtCosts.name].costs =
-        +finalSums[builtCosts.name].costs + +builtCosts.costs;
-    }
-  }
-  return finalSums;
+    return finalSums;
 };
 
 export const addUpHowManyHoursWorked = (data: tableDataFromDB[]): UserHours => {
-  const finalSums: UserHours = {};
+    const finalSums: UserHours = {};
 
-  for (const post of data) {
-    let builtHours: tableDataFromDB | { name: string; hours: string };
+    for (const post of data) {
+        let builtHours: tableDataFromDB | { name: string; hours: string };
 
-    if (!post.name) {
-      throw new Error("No name on post when adding up hours worked");
+        if (!post.name) {
+            throw new Error('No name on post when adding up hours worked');
+        }
+
+        if (post.hours === '' || !post.hours) {
+            builtHours = {
+                name: post.name,
+                hours: '0',
+            };
+        } else {
+            builtHours = post;
+        }
+
+        if (!finalSums[builtHours.name]) {
+            finalSums[builtHours.name] = { hours: +builtHours.hours };
+        } else {
+            finalSums[builtHours.name].hours = +finalSums[builtHours.name].hours + +builtHours.hours;
+        }
     }
 
-    if (post.hours === "" || !post.hours) {
-      builtHours = {
-        name: post.name,
-        hours: "0",
-      };
-    } else {
-      builtHours = post;
-    }
-
-    if (!finalSums[builtHours.name]) {
-      finalSums[builtHours.name] = { hours: +builtHours.hours };
-    } else {
-      finalSums[builtHours.name].hours =
-        +finalSums[builtHours.name].hours + +builtHours.hours;
-    }
-  }
-
-  return finalSums;
+    return finalSums;
 };
 
-tableRouter.get("/fetchTableData", async (req, res) => {
-  try {
-    const currentDay = new Date();
-    const pastDate = subtractDaysFromWeek(currentDay);
+tableRouter.get('/fetchTableData', async (req, res) => {
+    try {
+        const currentDay = new Date();
+        const pastDate = subtractDaysFromWeek(currentDay);
 
-    // Retrieve all entries with a users name
-    const postData = await posts.find({
-      createdAt: { $gte: pastDate.previousDaysAndWeek, $lte: currentDay },
-    });
+        // Retrieve all entries with a users name
+        const postData = await posts.find({
+            createdAt: { $gte: pastDate.previousDaysAndWeek, $lte: currentDay },
+        });
 
-    if (Array.isArray(postData) && postData.length === 0) {
-      return res.status(200).send([]);
+        if (Array.isArray(postData) && postData.length === 0) {
+            return res.status(200).send([]);
+        }
+
+        if (!isTableDataValid(postData)) {
+            return res.status(500).send({
+                valid: false,
+                result: 'Table data is in a incorrect configuration',
+            });
+        }
+
+        const dataByWeek = sortDataByWeek(postData, pastDate.previousDays);
+
+        const weeklyMappedData = dataByWeek.map((oneWeeksData): WeeklyMappedData => {
+            const dataByDay = sortDataByDay(oneWeeksData);
+
+            const weeklyData = addDailyUserEntriesTogether(dataByDay);
+
+            const overallCosts = addUpHowMuchUserSpent(oneWeeksData);
+
+            const overallHours = addUpHowManyHoursWorked(oneWeeksData);
+
+            return {
+                weeklyData,
+                overallCosts,
+                overallHours,
+            };
+        });
+
+        res.status(200).send(weeklyMappedData);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send(err);
     }
-
-    if (!isTableDataValid(postData)) {
-      return res.status(500).send({
-        valid: false,
-        result: "Table data is in a incorrect configuration",
-      });
-    }
-
-    const dataByWeek = sortDataByWeek(postData, pastDate.previousDays);
-
-    const weeklyMappedData = dataByWeek.map(
-      (oneWeeksData): WeeklyMappedData => {
-        const dataByDay = sortDataByDay(oneWeeksData);
-
-        const weeklyData = addDailyUserEntriesTogether(dataByDay);
-
-        const overallCosts = addUpHowMuchUserSpent(oneWeeksData);
-
-        const overallHours = addUpHowManyHoursWorked(oneWeeksData);
-
-        return {
-          weeklyData,
-          overallCosts,
-          overallHours,
-        };
-      }
-    );
-
-    res.status(200).send(weeklyMappedData);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send(err);
-  }
 });

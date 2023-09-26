@@ -1,5 +1,7 @@
 import * as dotenv from 'dotenv';
-import express, { Request } from 'express';
+dotenv.config();
+
+import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import { postsRouter } from './routes/posts.router';
@@ -7,8 +9,6 @@ import { tableRouter } from './routes/tableData.router';
 import { errorHandler } from './middleware/error.middleware';
 import { notFoundHandler } from './middleware/not-found.middleware';
 import connectDB from './common/database';
-
-dotenv.config();
 
 //App Variables
 if (!process.env.PORT) {

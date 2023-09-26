@@ -8,7 +8,7 @@ Description: >
 
 Globals:
     Function:
-        Timeout: 60
+        Timeout: 20
         MemorySize: 128
         CodeUri: aws/lambda/
         Runtime: nodejs18.x
@@ -23,7 +23,8 @@ Resources:
     S3ImageUploaderFunction:
         Type: AWS::Serverless::Function
         Properties:
-            Handler: app.s3_image_uploader
+            CodeUri: aws/lambda/
+            Handler: posts.s3_image_uploader
             Policies: 
                 - Version: '2012-10-17'
                   Statement:
@@ -40,10 +41,11 @@ Resources:
     UploadPostToDynamo:
         Type: AWS::Serverless::Function
         Properties:
+            CodeUri: aws/lambda/
             Policies:
                 - DynamoDBCrudPolicy:
                     TableName: !Ref PostsDynamoDbTable
-            Handler: app.save_post_to_dynamodb
+            Handler: posts.save_post_to_dynamodb
             Events:
                 UploadPostToDynamoEvents:
                     Type: Api
@@ -54,24 +56,71 @@ Resources:
     GetPostsFromDynamo:
         Type: AWS::Serverless::Function
         Properties:
+            CodeUri: aws/lambda/
             Policies:
                 - DynamoDBCrudPolicy:
                     TableName: !Ref PostsDynamoDbTable
-            Handler: app.get_posts_from_dynamodb
+            Handler: posts.get_posts_from_dynamodb
             Events:
-                UploadPostToDynamoEvents:
+                GetPostsFromDynamoEvents:
                     Type: Api
                     Properties:
                         Path: /getPostsFromDynamodb
                         Method: GET
     
+    GetTableDataFromDynamo:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: aws/lambda/
+            Policies:
+                - DynamoDBCrudPolicy:
+                    TableName: !Ref PostsDynamoDbTable
+            Handler: table.get_table_data
+            Events:
+                UploadPostToDynamoEvents:
+                    Type: Api
+                    Properties:
+                        Path: /getTableData
+                        Method: GET
+
+    DeletePostFromDynamo:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: aws/lambda/
+            Policies:
+                - DynamoDBCrudPolicy:
+                    TableName: !Ref PostsDynamoDbTable
+            Handler: posts.delete_post_from_dynamodb
+            Events:
+                DeletePostFromDynamoEvents:
+                    Type: Api
+                    Properties:
+                        Path: /deletePostFromDynamodb/{id}
+                        Method: DELETE
+
+    UpdatePostInDynamo:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: aws/lambda/
+            Policies:
+                - DynamoDBCrudPolicy:
+                    TableName: !Ref PostsDynamoDbTable
+            Handler: posts.update_post_in_dynamodb
+            Events:
+                UpdatePostInDynamoEvents:
+                    Type: Api
+                    Properties:
+                        Path: /updatePostInDynamodb/{id}
+                        Method: PUT
+    
     GetImageFromS3:
         Type: AWS::Serverless::Function
         Properties:
+            CodeUri: aws/lambda/
             Policies:
                 - DynamoDBReadPolicy:
                     TableName: !Ref PostsDynamoDbTable
-            Handler: app.s3_get_image
+            Handler: posts.s3_get_image
             Events:
                 GetImageFromS3Events:
                     Type: Api

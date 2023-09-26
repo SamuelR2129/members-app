@@ -36,17 +36,27 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 exports.__esModule = true;
-exports.get_posts_from_dynamodb = exports.save_post_to_dynamodb = exports.s3_image_uploader = exports.isPostsFromDBValid = void 0;
+exports.update_post_in_dynamodb = exports.delete_post_from_dynamodb = exports.get_posts_from_dynamodb = exports.save_post_to_dynamodb = exports.s3_image_uploader = exports.isPostBodyValid = exports.isPostsFromDBValid = void 0;
 var client_s3_1 = require("@aws-sdk/client-s3");
 var s3_request_presigner_1 = require("@aws-sdk/s3-request-presigner");
 var client_dynamodb_1 = require("@aws-sdk/client-dynamodb");
 var lib_dynamodb_1 = require("@aws-sdk/lib-dynamodb");
 var uuid_1 = require("uuid");
+var date_fns_tz_1 = require("date-fns-tz");
 var isPostsFromDBValid = function (unknownData) {
     var postsFromDB = unknownData;
     return postsFromDB && postsFromDB.Items !== undefined && Array.isArray(postsFromDB.Items);
 };
 exports.isPostsFromDBValid = isPostsFromDBValid;
+var isPostBodyValid = function (unknown) {
+    var body = unknown;
+    return (body &&
+        body.name !== undefined &&
+        body.costs !== undefined &&
+        body.hours !== undefined &&
+        body.report !== undefined);
+};
+exports.isPostBodyValid = isPostBodyValid;
 var validDecodedImage = function (unknown) {
     var decodedImage = unknown;
     return (decodedImage !== undefined &&
@@ -108,7 +118,7 @@ var s3_image_uploader = function (event) { return __awaiter(void 0, void 0, void
                 console.error('Error:', err_1);
                 return [2 /*return*/, {
                         statusCode: 500,
-                        body: JSON.stringify({ message: 'There was an error getting posts from dynamodb' })
+                        body: JSON.stringify({ message: 'There was an error saving image to s3' })
                     }];
             case 5: return [2 /*return*/];
         }
@@ -124,6 +134,9 @@ var save_post_to_dynamodb = function (event) { return __awaiter(void 0, void 0, 
                 _c.trys.push([0, 2, , 3]);
                 console.log('Starting save_post_to_dynamodb');
                 body = event.body ? JSON.parse(event.body) : undefined;
+                if (!(0, exports.isPostBodyValid)(body)) {
+                    throw new Error('The body to create a post is missing information');
+                }
                 command = new lib_dynamodb_1.PutCommand({
                     TableName: process.env.DYNAMO_TABLE_NAME,
                     Item: {
@@ -133,8 +146,9 @@ var save_post_to_dynamodb = function (event) { return __awaiter(void 0, void 0, 
                         costs: body.costs,
                         report: body.report,
                         buildSite: body.buildSite,
-                        imageNames: body.imageNames,
-                        imageUrls: body.imageUrls
+                        imageNames: body.imageNames || [],
+                        imageUrls: body.imageUrls || [],
+                        createdAt: (0, date_fns_tz_1.utcToZonedTime)(new Date(), 'Australia/Sydney').toISOString()
                     }
                 });
                 return [4 /*yield*/, docClient.send(command)];
@@ -152,7 +166,7 @@ var save_post_to_dynamodb = function (event) { return __awaiter(void 0, void 0, 
                 console.error('Error:', err_2);
                 return [2 /*return*/, {
                         statusCode: 500,
-                        body: JSON.stringify({ message: 'There was an error getting posts from dynamodb' })
+                        body: JSON.stringify({ message: 'There was an error saving post to dynamodb' })
                     }];
             case 3: return [2 /*return*/];
         }
@@ -197,3 +211,91 @@ var get_posts_from_dynamodb = function (event) { return __awaiter(void 0, void 0
     });
 }); };
 exports.get_posts_from_dynamodb = get_posts_from_dynamodb;
+var delete_post_from_dynamodb = function (event) { return __awaiter(void 0, void 0, void 0, function () {
+    var postId, params, command, response, err_4;
+    var _a;
+    return __generator(this, function (_b) {
+        switch (_b.label) {
+            case 0:
+                console.log('Starting delete post from dynamodb');
+                _b.label = 1;
+            case 1:
+                _b.trys.push([1, 3, , 4]);
+                postId = (_a = event.pathParameters) === null || _a === void 0 ? void 0 : _a.id;
+                if (!postId) {
+                    throw new Error('Id is missing from path');
+                }
+                params = {
+                    TableName: process.env.DYNAMO_TABLE_NAME,
+                    Key: { id: { S: postId } }
+                };
+                command = new client_dynamodb_1.DeleteItemCommand(params);
+                return [4 /*yield*/, client.send(command)];
+            case 2:
+                response = _b.sent();
+                if (response.$metadata.httpStatusCode !== 200) {
+                    throw new Error("There was an issue deleting the post statusCode:".concat(response.$metadata.httpStatusCode));
+                }
+                return [2 /*return*/, {
+                        statusCode: 200,
+                        body: JSON.stringify(response)
+                    }];
+            case 3:
+                err_4 = _b.sent();
+                console.error('Error:', err_4);
+                return [2 /*return*/, {
+                        statusCode: 500,
+                        body: JSON.stringify({ message: 'There was an error deleting posts from dynamodb' })
+                    }];
+            case 4: return [2 /*return*/];
+        }
+    });
+}); };
+exports.delete_post_from_dynamodb = delete_post_from_dynamodb;
+var update_post_in_dynamodb = function (event) { return __awaiter(void 0, void 0, void 0, function () {
+    var data, params, command, response, err_5;
+    var _a;
+    return __generator(this, function (_b) {
+        switch (_b.label) {
+            case 0:
+                console.log('Starting update post in dynamodb');
+                _b.label = 1;
+            case 1:
+                _b.trys.push([1, 3, , 4]);
+                data = event.body && JSON.parse(event.body);
+                if (!data.report || !data.buildSite || !((_a = event.pathParameters) === null || _a === void 0 ? void 0 : _a.id)) {
+                    throw new Error("Value missing to update id: ".concat(data.id, " buildSite: ").concat(data.buildSite, " report: ").concat(data.report, " "));
+                }
+                params = {
+                    TableName: process.env.DYNAMO_TABLE_NAME,
+                    Key: { id: { S: event.pathParameters.id } },
+                    UpdateExpression: 'SET report = :report, buildSite = :buildSite',
+                    ExpressionAttributeValues: {
+                        ':report': { S: data.report },
+                        ':buildSite': { S: data.buildSite }
+                    },
+                    ReturnValues: 'ALL_NEW'
+                };
+                command = new client_dynamodb_1.UpdateItemCommand(params);
+                return [4 /*yield*/, client.send(command)];
+            case 2:
+                response = _b.sent();
+                if (response.$metadata.httpStatusCode !== 200) {
+                    throw new Error("There was an issue updating the post statusCode:".concat(response.$metadata.httpStatusCode));
+                }
+                return [2 /*return*/, {
+                        statusCode: 200,
+                        body: JSON.stringify(response)
+                    }];
+            case 3:
+                err_5 = _b.sent();
+                console.error('Error:', err_5);
+                return [2 /*return*/, {
+                        statusCode: 500,
+                        body: JSON.stringify({ message: 'There was an error updating post in dynamodb' })
+                    }];
+            case 4: return [2 /*return*/];
+        }
+    });
+}); };
+exports.update_post_in_dynamodb = update_post_in_dynamodb;

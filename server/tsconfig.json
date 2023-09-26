@@ -3,7 +3,7 @@
     "compilerOptions": {
         "esModuleInterop": true,
         "lib": ["es2020"],
-        "module": "es2022",
+        "module": "commonjs",
         "preserveConstEnums": true,
         "moduleResolution": "node",
         "strict": true,
