@@ -29,7 +29,11 @@ cdk.out
 
 aws/dist
 
-.aws-sam/
 packaged.yaml
 samconfig.toml
 *.db
+
+node_modules
+.aws-sam
+env.json
+dist/

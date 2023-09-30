@@ -7,12 +7,17 @@ Description: >
     Holds the lambda and s3 functions for the server
 
 Globals:
+    Api:
+        BinaryMediaTypes:
+        - "multipart/form-data"
+        - "application/json"
     Function:
-        Timeout: 20
+        Timeout: 100
         MemorySize: 128
-        CodeUri: aws/lambda/
         Runtime: nodejs18.x
         Architectures: [x86_64]
+        Layers:
+          - !Ref CRUDDependencyLayer
         Environment:
             Variables:
                 REGION_NAME: 'ap-southeast-2'
@@ -20,64 +25,52 @@ Globals:
                 DYNAMO_TABLE_NAME: 'post-tables'
                 S3_BUCKET_NAME: 's3-lambda-stack-srcbucket-dpcaitz3x0hb'
 Resources:
-    S3ImageUploaderFunction:
-        Type: AWS::Serverless::Function
-        Properties:
-            CodeUri: aws/lambda/
-            Handler: posts.s3_image_uploader
-            Policies: 
-                - Version: '2012-10-17'
-                  Statement:
-                    - Effect: Allow
-                      Action: 's3:*'
-                      Resource: '*'
-            Events:
-                S3ImageUploaderFunctionEvents:
-                    Type: Api
-                    Properties:
-                        Path: /uploadImageToS3
-                        Method: POST
 
     UploadPostToDynamo:
         Type: AWS::Serverless::Function
+        Metadata:
+            BuildMethod: makefile
         Properties:
-            CodeUri: aws/lambda/
             Policies:
                 - DynamoDBCrudPolicy:
                     TableName: !Ref PostsDynamoDbTable
-            Handler: posts.save_post_to_dynamodb
+                - S3CrudPolicy:
+                    BucketName: "s3-lambda-stack-srcbucket-dpcaitz3x0hb"
+            Handler: dist/posts/savePost.save_post_to_dynamodb
             Events:
-                UploadPostToDynamoEvents:
+                Api:
                     Type: Api
                     Properties:
-                        Path: /uploadPostToDynamo
+                        Path: /savePost
                         Method: POST
 
     GetPostsFromDynamo:
         Type: AWS::Serverless::Function
+        Metadata:
+            BuildMethod: makefile
         Properties:
-            CodeUri: aws/lambda/
             Policies:
                 - DynamoDBCrudPolicy:
                     TableName: !Ref PostsDynamoDbTable
-            Handler: posts.get_posts_from_dynamodb
+            Handler: dist/posts/getPosts.get_posts_from_dynamodb
             Events:
-                GetPostsFromDynamoEvents:
+                Api:
                     Type: Api
                     Properties:
-                        Path: /getPostsFromDynamodb
+                        Path: /getPosts
                         Method: GET
     
-    GetTableDataFromDynamo:
+    GetTableData:
         Type: AWS::Serverless::Function
+        Metadata:
+            BuildMethod: makefile
         Properties:
-            CodeUri: aws/lambda/
             Policies:
                 - DynamoDBCrudPolicy:
                     TableName: !Ref PostsDynamoDbTable
-            Handler: table.get_table_data
+            Handler: dist/table/getTableData.get_table_data
             Events:
-                UploadPostToDynamoEvents:
+                Api:
                     Type: Api
                     Properties:
                         Path: /getTableData
@@ -85,48 +78,36 @@ Resources:
 
     DeletePostFromDynamo:
         Type: AWS::Serverless::Function
+        Metadata:
+            BuildMethod: makefile
         Properties:
-            CodeUri: aws/lambda/
             Policies:
                 - DynamoDBCrudPolicy:
                     TableName: !Ref PostsDynamoDbTable
-            Handler: posts.delete_post_from_dynamodb
+            Handler: dist/posts/deletePost.delete_post_from_dynamodb
             Events:
-                DeletePostFromDynamoEvents:
+                Api:
                     Type: Api
                     Properties:
-                        Path: /deletePostFromDynamodb/{id}
+                        Path: /deletePost/{id}
                         Method: DELETE
 
     UpdatePostInDynamo:
         Type: AWS::Serverless::Function
+        Metadata:
+            BuildMethod: makefile
         Properties:
-            CodeUri: aws/lambda/
             Policies:
                 - DynamoDBCrudPolicy:
                     TableName: !Ref PostsDynamoDbTable
-            Handler: posts.update_post_in_dynamodb
+            Handler: dist/posts/updatePost.update_post_in_dynamodb
             Events:
-                UpdatePostInDynamoEvents:
+                Api:
                     Type: Api
                     Properties:
-                        Path: /updatePostInDynamodb/{id}
+                        Path: /updatePost/{id}
                         Method: PUT
     
-    GetImageFromS3:
-        Type: AWS::Serverless::Function
-        Properties:
-            CodeUri: aws/lambda/
-            Policies:
-                - DynamoDBReadPolicy:
-                    TableName: !Ref PostsDynamoDbTable
-            Handler: posts.s3_get_image
-            Events:
-                GetImageFromS3Events:
-                    Type: Api
-                    Properties:
-                        Path: /images/{id}
-                        Method: GET
     SrcBucket:
         Type: AWS::S3::Bucket
 
@@ -143,13 +124,20 @@ Resources:
                 ReadCapacityUnits: 5
                 WriteCapacityUnits: 5
             TableName: 'post-tables'
-# Outputs:
-#     # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
-#     # Find out more about other implicit resources you can reference within SAM
-#     # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
-#     ImageApi:
-#         Description: 'API Gateway endpoint URL for Prod stage for ImageaApi function'
-#         Value: !Sub 'https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/image/'
-#     S3ImageUploaderFunction:
-#         Description: 'S3ImageUploaderFunction Lambda Function ARN'
-#         Value: !GetAtt S3ImageUploaderFunction.Arn
+
+    CRUDDependencyLayer:
+        Type: AWS::Serverless::LayerVersion
+        Metadata:
+            BuildMethod: makefile
+        Properties:
+            Description: Dependencies for lambdas
+            ContentUri: ./
+            CompatibleRuntimes:
+              - nodejs18.x
+            LicenseInfo: 'MIT'
+            RetentionPolicy: Retain
+
+Outputs:
+  WebEndpoint:
+    Description: "API Gateway endpoint URL for Prod stage"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
