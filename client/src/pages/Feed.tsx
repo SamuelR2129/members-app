@@ -1,17 +1,38 @@
 import { useEffect, useState } from 'react';
-import Post from './Post';
+import Post from '../components/Post';
 import { feedState } from '../atom/feedAtom';
 import { useRecoilState } from 'recoil';
-import { PostState } from '../types';
-import { filterTrimOrderPosts } from './utils';
+import { filterTrimOrderPosts } from '../components/utils';
 import { FilterHeading, FilterSelect, SiteFilter } from '../styles/feed';
-import axios, { AxiosResponse } from 'axios';
+import axios from 'axios';
+import { z } from 'zod';
 
-const isFetchingFeedResponseValid = (
-  unknownData: unknown
-): unknownData is AxiosResponse<PostState[]> => {
-  const data = unknownData as AxiosResponse<PostState[]>;
-  return data !== undefined && data.status === 200 && Array.isArray(data.data);
+const PostStateSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  report: z.string(),
+  createdAt: z.string(),
+  buildSite: z.string(),
+  imageNames: z.array(z.string()).optional(),
+  imageUrls: z.array(z.string()).optional()
+});
+
+const FeedSchema = z.object({
+  LastEvaluatedKey: z.object({ id: z.string() }).optional(),
+  mappedPosts: PostStateSchema.array()
+});
+
+const FeedResponseSchema = z.object({ data: FeedSchema });
+
+export type PostState = z.infer<typeof PostStateSchema>;
+export type Feed = z.infer<typeof FeedSchema>;
+
+const isFetchingFeedResponseValid = (unknownData: unknown): unknownData is PostState => {
+  const result = FeedResponseSchema.safeParse(unknownData);
+  if (result.success) {
+    return true;
+  }
+  return false;
 };
 
 const Feed = (): JSX.Element => {
@@ -20,14 +41,19 @@ const Feed = (): JSX.Element => {
   const [error, setError] = useState<boolean>(false);
   const [site, setSite] = useState<string>('');
   const [isFetching, setIsFetching] = useState<boolean>(false);
-  const [pagination, setPagination] = useState<number>(0);
   const [noMorePosts, setNoMorePosts] = useState<boolean>(false);
   const [selectedOptionPosts, setSelectedOptionPosts] = useState<PostState[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [lastEvaluatedKey, setLastEvaluatedKey] = useState<string | undefined>();
 
   const fetchFeed = async () => {
-    const response = await axios(`/posts/feed?page=${pagination}&limit=5`);
+    const getUrl =
+      `${process.env.REACT_APP_API_GATEWAY_PROD}getPosts?limit=5` +
+      (lastEvaluatedKey ? `&LastEvaluatedKey=${lastEvaluatedKey}` : '');
 
-    if (!isFetchingFeedResponseValid(response) && response.status !== 204) {
+    const response = await axios<Feed>(getUrl);
+
+    if (!isFetchingFeedResponseValid(response)) {
       console.error('An error occurred while fetching the feed:', response);
       setError(true);
     }
@@ -39,8 +65,8 @@ const Feed = (): JSX.Element => {
       return;
     }
 
-    setGlobalFeed((prevFeed) => [...prevFeed, ...response.data]);
-    setPagination((prevPagination) => prevPagination + 1);
+    setLastEvaluatedKey(response.data.LastEvaluatedKey?.id);
+    setGlobalFeed((prevFeed) => [...prevFeed, ...response.data.mappedPosts]);
     setIsFetching(false);
     setLoading(false);
   };
@@ -103,7 +129,7 @@ const Feed = (): JSX.Element => {
         {!error ? (
           <>
             {selectedOptionPosts.map((post) => (
-              <Post key={post._id} post={post} />
+              <Post key={post.id} post={post} />
             ))}
             {noMorePosts && <div>No more posts to load</div>}
             {loading && <div>Searching for posts...</div>}

@@ -3,7 +3,7 @@ import '../styles/table.css';
 import useSWR from 'swr';
 
 export type CellData = {
-  _id: string;
+  id: string;
   name: string;
   createdAt: Date;
   costs: number;

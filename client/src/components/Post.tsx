@@ -1,6 +1,5 @@
 import { useRecoilState } from 'recoil';
 import { feedState } from '../atom/feedAtom';
-import { PostState } from '../types';
 import { pulsePostCardToggle, restructureDateTime } from './utils';
 import axios from 'axios';
 import {
@@ -13,29 +12,30 @@ import {
   PostTimeCreated
 } from '../styles/post';
 import { useState } from 'react';
-import { EditPostModal } from './EditPostModal';
+import { EditPostModal } from '../forms/EditPostModal';
 import ImageCarousel from './ImageCarousel';
+import { PostState } from '../pages/Feed';
 
 type PostType = {
   post: {
-    _id: string;
+    id: string;
     name: string;
     report: string;
     buildSite: string;
     createdAt: string;
-    imageNames: (string | undefined)[];
-    imageUrls: (string | undefined)[];
+    imageName?: string[];
+    imageUrls?: string[];
   };
 };
 
 export type EditFormValues = {
-  _id: string;
+  id: string;
   report: string;
   buildSite: string;
 };
 
 const removeStatePostById = (feed: PostState[], _idToRemove: string): PostState[] => {
-  const newArray = feed.filter((post) => post._id !== _idToRemove);
+  const newArray = feed.filter((post) => post.id !== _idToRemove);
   return newArray;
 };
 
@@ -50,7 +50,7 @@ const Post = ({ post }: PostType) => {
   const deletePost = async (post: PostState) => {
     pulsePostCardToggle();
 
-    const response = await axios.post(`/posts/delete/${post._id}`, post);
+    const response = await axios.post(`/posts/delete/${post.id}`, post);
 
     if (!response) {
       pulsePostCardToggle();
@@ -60,7 +60,7 @@ const Post = ({ post }: PostType) => {
       throw new Error(`This is an HTTP error deleting your post: The status is ${response}`);
     }
 
-    const newFeed = removeStatePostById(globalFeed, post._id);
+    const newFeed = removeStatePostById(globalFeed, post.id);
     setGlobalFeed(newFeed);
     pulsePostCardToggle();
     alert('Post was deleted!');

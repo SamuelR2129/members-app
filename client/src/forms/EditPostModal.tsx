@@ -3,7 +3,7 @@ import { EditedPost, PostState } from '../types';
 import { useRecoilState } from 'recoil';
 import { feedState } from '../atom/feedAtom';
 import axios from 'axios';
-import { injectEditedPostIntoFeed } from './utils';
+import { injectEditedPostIntoFeed } from '../components/utils';
 import {
   ModalWrapper,
   ModalContent,
@@ -21,13 +21,11 @@ const isEditedPostValid = (unknownData: unknown): unknownData is EditedPost => {
   return (
     data !== undefined &&
     data.data !== undefined &&
-    data.data.data._id !== undefined &&
+    data.data.data.id !== undefined &&
     data.data.data.buildSite !== undefined &&
     data.data.data.createdAt !== undefined &&
     data.data.data.name !== undefined &&
-    data.data.data.report !== undefined &&
-    data.data.data.imageNames !== undefined &&
-    data.data.data.imageUrls !== undefined
+    data.data.data.report !== undefined
   );
 };
 
@@ -63,7 +61,7 @@ export const EditPostModal = ({ show, post, close }: EditPostModal) => {
     };
 
     const response = await axios.post<unknown>(
-      `${process.env.REACT_APP_SERVER_URL}/posts/update/${post._id}`,
+      `${process.env.REACT_APP_SERVER_URL}/posts/update/${post.id}`,
       data
     );
 

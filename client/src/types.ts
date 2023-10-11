@@ -1,11 +1,11 @@
 export type PostState = {
-  _id: string;
+  id: string;
   name: string;
   report: string;
   createdAt: string;
   buildSite: string;
-  imageNames: (string | undefined)[];
-  imageUrls: (string | undefined)[];
+  imageNames?: string[];
+  imageUrls?: string[];
 };
 
 export type EditedPost = {

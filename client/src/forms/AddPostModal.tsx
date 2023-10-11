@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useRecoilState } from 'recoil';
 import { feedState } from '../atom/feedAtom';
 import { createPortal } from 'react-dom';
-import { PostState } from '../types';
 import {
   ModalBody,
   ModalCloseButton,
@@ -17,6 +16,7 @@ import {
 } from '../styles/addPostModal';
 import axios from 'axios';
 import { useForm, SubmitHandler } from 'react-hook-form';
+import { PostState } from '../pages/Feed';
 
 type FormProps = {
   show: boolean;
@@ -32,24 +32,16 @@ type AddPostModalData = {
   images: File[] | File;
 };
 
-const convertToFormData = (data: AddPostModalData) => {
-  const formData = new FormData();
+type PostData = {
+  name: string;
+  hours: number;
+  costs: number;
+  report: string;
+  buildSite: string;
+  imageNames?: string[];
+}
 
-  Object.keys(data).forEach((key) => {
-    if (key === 'images') {
-      // Handle images separately to be found in req.files
-      const imageFiles = data[key as keyof typeof data] as File[];
-      for (const imageFile of imageFiles) {
-        formData.append('images', imageFile);
-      }
-    } else {
-      // For other form fields
-      formData.append(key, data[key as keyof typeof data] as string);
-    }
-  });
-
-  return formData;
-};
+type ImageNames = string;
 
 const addPostResponseIsValid = (
   unknownData: unknown
@@ -59,7 +51,7 @@ const addPostResponseIsValid = (
     response !== undefined &&
     response.data !== undefined &&
     response.data.data !== undefined &&
-    response.data.data._id !== undefined &&
+    response.data.data.id !== undefined &&
     response.data.data.buildSite !== undefined &&
     response.data.data.createdAt !== undefined &&
     response.data.data.imageNames !== undefined &&
@@ -68,6 +60,8 @@ const addPostResponseIsValid = (
     response.data.data.report !== undefined
   );
 };
+
+const getImageNamesFromFormData = (data: AddPostModalData): ImageNames[]
 
 const AddPostModal = (props: FormProps) => {
   const [submitting, setSubmitting] = useState(false);
@@ -81,19 +75,22 @@ const AddPostModal = (props: FormProps) => {
   } = useForm<AddPostModalData>();
 
   const onSubmit: SubmitHandler<AddPostModalData> = async (data) => {
-    const formData = convertToFormData(data);
-
     setSubmitting(true);
 
     try {
+      const postData: PostData = {
+        name: data.name,
+        hours: data.hours,
+        costs: data.costs,
+        report: data.report,
+        buildSite: data.buildSite
+      }
+
+      if (data.images) postData.imageNames = getImageNamesFromFormData(data);
+
       const response = await axios.post<PostState>(
-        `${process.env.REACT_APP_SERVER_URL}/posts/makepost`,
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
-        }
+        `${process.env.REACT_APP_API_GATEWAY_PROD}/posts/makepost`,
+        data
       );
 
       if (!addPostResponseIsValid(response)) {

@@ -1,6 +1,6 @@
-import { PostState } from '../types';
 import { utcToZonedTime } from 'date-fns-tz';
 import { parseISO, format } from 'date-fns';
+import { PostState } from '../pages/Feed';
 
 export const pulsePostCardToggle = () => {
   document.querySelector('#post-wrapper')?.classList.toggle('animate-pulse');
@@ -12,7 +12,7 @@ export const filterTrimOrderPosts = (globalFeed: PostState[], selectedSite: stri
   );
 
   const removedDuplicatesFromPosts = filteredPosts.filter(
-    (post, index, self) => index === self.findIndex((o) => o._id === post._id)
+    (post, index, self) => index === self.findIndex((o) => o.id === post.id)
   );
 
   const newestPostsFirst = removedDuplicatesFromPosts.sort(
@@ -23,7 +23,7 @@ export const filterTrimOrderPosts = (globalFeed: PostState[], selectedSite: stri
 };
 
 export const injectEditedPostIntoFeed = (editedPost: PostState, globalFeed: PostState[]) => {
-  return globalFeed.map((post) => (post._id !== editedPost._id ? post : editedPost));
+  return globalFeed.map((post) => (post.id !== editedPost.id ? post : editedPost));
 };
 
 export const restructureDateTime = (dateTime: string) => {

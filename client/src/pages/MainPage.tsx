@@ -1,6 +1,6 @@
-import Feed from '../components/Feed';
+import Feed from './Feed';
 import { useState } from 'react';
-import AddPostModal from '../components/AddPostModal';
+import AddPostModal from '../forms/AddPostModal';
 import { FormButton } from '../styles/mainPage';
 
 const MainPage = () => {

@@ -3,7 +3,7 @@ import { BsChevronCompactLeft, BsChevronCompactRight } from 'react-icons/bs';
 import { RxDotFilled } from 'react-icons/rx';
 
 type ImageCarouselProps = {
-  imageUrlArray: (string | undefined)[];
+  imageUrlArray: string[];
 };
 
 const ImageCarousel = ({ imageUrlArray }: ImageCarouselProps) => {

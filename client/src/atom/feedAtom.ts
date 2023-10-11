@@ -1,5 +1,5 @@
 import { atom } from 'recoil';
-import { PostState } from '../types';
+import { PostState } from '../pages/Feed';
 
 export const feedState = atom({
   key: 'feedState',
