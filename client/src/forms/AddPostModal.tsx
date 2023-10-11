@@ -17,6 +17,7 @@ import {
 import axios from 'axios';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { PostState } from '../pages/Feed';
+import { z } from 'zod';
 
 type FormProps = {
   show: boolean;
@@ -25,43 +26,54 @@ type FormProps = {
 
 type AddPostModalData = {
   name: string;
-  hours: number;
-  costs: number;
+  hours: string;
+  costs: string;
   report: string;
   buildSite: string;
-  images: File[] | File;
+  images: FileList;
 };
 
 type PostData = {
   name: string;
-  hours: number;
-  costs: number;
+  hours: string;
+  costs: string;
   report: string;
   buildSite: string;
   imageNames?: string[];
-}
-
-type ImageNames = string;
-
-const addPostResponseIsValid = (
-  unknownData: unknown
-): unknownData is { data: { data: PostState } } => {
-  const response = unknownData as { data: { data: PostState } };
-  return (
-    response !== undefined &&
-    response.data !== undefined &&
-    response.data.data !== undefined &&
-    response.data.data.id !== undefined &&
-    response.data.data.buildSite !== undefined &&
-    response.data.data.createdAt !== undefined &&
-    response.data.data.imageNames !== undefined &&
-    response.data.data.imageUrls !== undefined &&
-    response.data.data.name !== undefined &&
-    response.data.data.report !== undefined
-  );
 };
 
-const getImageNamesFromFormData = (data: AddPostModalData): ImageNames[]
+const NewPostSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  report: z.string(),
+  createdAt: z.string(),
+  buildSite: z.string(),
+  imageNames: z.array(z.string()).optional()
+});
+
+const AddPostResponse = z.object({
+  newPost: NewPostSchema,
+  imageUploadUrls: z.string().array().optional()
+});
+
+type AddPostResponse = z.infer<typeof AddPostResponse>;
+
+const isAddPostResponseValid = (unknownData: unknown): unknownData is PostState => {
+  const result = AddPostResponse.safeParse(unknownData);
+  if (result.success) return true;
+  return false;
+};
+
+const getImageNamesFromFormData = (images: FileList): string[] => {
+  return [...images].map((image) => {
+    return image.name;
+  });
+};
+
+const uploadImagesToS3 = async (url: string, image: File) => {
+  const x = await axios.put(url, image);
+  console.log(x);
+};
 
 const AddPostModal = (props: FormProps) => {
   const [submitting, setSubmitting] = useState(false);
@@ -80,26 +92,30 @@ const AddPostModal = (props: FormProps) => {
     try {
       const postData: PostData = {
         name: data.name,
-        hours: data.hours,
-        costs: data.costs,
+        hours: data.hours.toString(),
+        costs: data.costs.toString(),
         report: data.report,
         buildSite: data.buildSite
-      }
+      };
 
-      if (data.images) postData.imageNames = getImageNamesFromFormData(data);
+      if (data.images) postData.imageNames = getImageNamesFromFormData(data.images);
 
-      const response = await axios.post<PostState>(
-        `${process.env.REACT_APP_API_GATEWAY_PROD}/posts/makepost`,
-        data
+      const response = await axios.post<AddPostResponse>(
+        `${process.env.REACT_APP_API_GATEWAY_PROD}savePost`,
+        JSON.stringify(postData)
       );
 
-      if (!addPostResponseIsValid(response)) {
+      if (!isAddPostResponseValid(response)) {
         console.error(response);
-        throw new Error(`Response from makepost server is not correct`);
+        alert('There has been an error submitting your post');
       }
-      // eslint-disable-next-line no-debugger
-      debugger;
-      setGlobalFeed([response.data.data, ...globalFeed]);
+
+      if (response.data.imageUploadUrls)
+        response.data.imageUploadUrls.map((url, index) => {
+          uploadImagesToS3(url, data.images[index]);
+        });
+
+      setGlobalFeed([response.data.newPost, ...globalFeed]);
 
       reset();
 
