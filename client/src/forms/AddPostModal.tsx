@@ -48,7 +48,7 @@ const NewPostSchema = z.object({
   report: z.string(),
   createdAt: z.string(),
   buildSite: z.string(),
-  imageNames: z.array(z.string()).optional()
+  imageNames: z.string().array().optional()
 });
 
 const AddPostResponse = z.object({
@@ -61,6 +61,7 @@ type AddPostResponse = z.infer<typeof AddPostResponse>;
 const isAddPostResponseValid = (unknownData: unknown): unknownData is PostState => {
   const result = AddPostResponse.safeParse(unknownData);
   if (result.success) return true;
+  console.error(result.error.message);
   return false;
 };
 
@@ -98,7 +99,7 @@ const AddPostModal = (props: FormProps) => {
         buildSite: data.buildSite
       };
 
-      if (data.images) postData.imageNames = getImageNamesFromFormData(data.images);
+      if (data.images.length > 0) postData.imageNames = getImageNamesFromFormData(data.images);
 
       const response = await axios.post<AddPostResponse>(
         `${process.env.REACT_APP_API_GATEWAY_PROD}savePost`,
@@ -108,12 +109,16 @@ const AddPostModal = (props: FormProps) => {
       if (!isAddPostResponseValid(response)) {
         console.error(response);
         alert('There has been an error submitting your post');
+        return;
       }
 
-      if (response.data.imageUploadUrls)
+      if (response.data.imageUploadUrls) {
+        // eslint-disable-next-line no-debugger
+        debugger;
         response.data.imageUploadUrls.map((url, index) => {
           uploadImagesToS3(url, data.images[index]);
         });
+      }
 
       setGlobalFeed([response.data.newPost, ...globalFeed]);
 
@@ -124,6 +129,8 @@ const AddPostModal = (props: FormProps) => {
       alert('Post was successful!');
 
       props.onClose();
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err) {
       console.error('System Error Submitting Post: ', err);
       alert('There has been an error submitting your post');
