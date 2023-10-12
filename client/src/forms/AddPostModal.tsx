@@ -18,6 +18,7 @@ import axios from 'axios';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { PostState } from '../pages/Feed';
 import { z } from 'zod';
+import { pulsePostCardToggle } from '../components/utils';
 
 type FormProps = {
   show: boolean;
@@ -91,7 +92,9 @@ const AddPostModal = (props: FormProps) => {
   } = useForm<AddPostModalData>();
 
   const onSubmit: SubmitHandler<AddPostModalData> = async (data) => {
-    setSubmitting(true);
+    // eslint-disable-next-line no-debugger
+    debugger;
+    pulsePostCardToggle();
 
     try {
       const postData: PostData = {
@@ -110,9 +113,8 @@ const AddPostModal = (props: FormProps) => {
       );
 
       if (!isAddPostResponseValid(response.data)) {
-        console.error('savePost response: ', response);
         alert('There has been an error submitting your post');
-        setSubmitting(false);
+        pulsePostCardToggle();
         return;
       }
 
@@ -127,7 +129,7 @@ const AddPostModal = (props: FormProps) => {
       //resets the form values
       reset();
 
-      setSubmitting(false);
+      pulsePostCardToggle();
 
       alert('Post was successful!');
 
@@ -140,7 +142,7 @@ const AddPostModal = (props: FormProps) => {
   };
 
   return createPortal(
-    <ModalWrapper onClick={() => props.onClose()}>
+    <ModalWrapper onClick={() => props.onClose()} className="pulse">
       <ModalContent onClick={(e) => e.stopPropagation()}>
         <ModalHeaderFooter>
           <h2 className="m-0">Make a post</h2>

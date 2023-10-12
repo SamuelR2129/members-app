@@ -3,7 +3,7 @@ import { parseISO, format } from 'date-fns';
 import { PostState } from '../pages/Feed';
 
 export const pulsePostCardToggle = () => {
-  document.querySelector('#post-wrapper')?.classList.toggle('animate-pulse');
+  document.querySelector('.pulse')?.classList.toggle('animate-pulse');
 };
 
 export const filterTrimOrderPosts = (globalFeed: PostState[], selectedSite: string) => {
@@ -20,10 +20,6 @@ export const filterTrimOrderPosts = (globalFeed: PostState[], selectedSite: stri
   );
 
   return newestPostsFirst;
-};
-
-export const injectEditedPostIntoFeed = (editedPost: PostState, globalFeed: PostState[]) => {
-  return globalFeed.map((post) => (post.id !== editedPost.id ? post : editedPost));
 };
 
 export const restructureDateTime = (dateTime: string) => {

@@ -66,7 +66,7 @@ const Post = ({ post }: PostType) => {
   };
 
   return (
-    <PostWrapper id="post-wrapper">
+    <PostWrapper className="pulse">
       <PostName>{post.name}</PostName>
 
       <PostBuildSite>{post.buildSite}</PostBuildSite>
