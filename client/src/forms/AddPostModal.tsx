@@ -72,8 +72,11 @@ const getImageNamesFromFormData = (images: FileList): string[] => {
 };
 
 const uploadImagesToS3 = async (url: string, image: File) => {
-  const x = await axios.put(url, image);
-  console.log(x);
+  const response = await axios.put(url, image);
+
+  if (response.status !== 200) {
+    throw new Error(`Error in uploading image with presigned s3 url - ${response.status} `);
+  }
 };
 
 const AddPostModal = (props: FormProps) => {
@@ -102,19 +105,18 @@ const AddPostModal = (props: FormProps) => {
       if (data.images.length > 0) postData.imageNames = getImageNamesFromFormData(data.images);
 
       const response = await axios.post<AddPostResponse>(
-        `${process.env.REACT_APP_API_GATEWAY_PROD}savePost`,
+        `${process.env.REACT_APP_SERVER_URL}savePost`,
         JSON.stringify(postData)
       );
 
-      if (!isAddPostResponseValid(response)) {
-        console.error(response);
+      if (!isAddPostResponseValid(response.data)) {
+        console.error('savePost response: ', response);
         alert('There has been an error submitting your post');
+        setSubmitting(false);
         return;
       }
 
       if (response.data.imageUploadUrls) {
-        // eslint-disable-next-line no-debugger
-        debugger;
         response.data.imageUploadUrls.map((url, index) => {
           uploadImagesToS3(url, data.images[index]);
         });
@@ -122,6 +124,7 @@ const AddPostModal = (props: FormProps) => {
 
       setGlobalFeed([response.data.newPost, ...globalFeed]);
 
+      //resets the form values
       reset();
 
       setSubmitting(false);
@@ -129,8 +132,6 @@ const AddPostModal = (props: FormProps) => {
       alert('Post was successful!');
 
       props.onClose();
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err) {
       console.error('System Error Submitting Post: ', err);
       alert('There has been an error submitting your post');

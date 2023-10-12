@@ -13,8 +13,7 @@ const PostStateSchema = z.object({
   report: z.string(),
   createdAt: z.string(),
   buildSite: z.string(),
-  imageNames: z.array(z.string()).optional(),
-  imageUrls: z.array(z.string()).optional()
+  imageNames: z.string().array().optional()
 });
 
 const FeedSchema = z.object({

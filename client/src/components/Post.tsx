@@ -23,8 +23,7 @@ type PostType = {
     report: string;
     buildSite: string;
     createdAt: string;
-    imageName?: string[];
-    imageUrls?: string[];
+    imageNames?: string[];
   };
 };
 
@@ -65,9 +64,6 @@ const Post = ({ post }: PostType) => {
     pulsePostCardToggle();
     alert('Post was deleted!');
   };
-  /*          post.imageUrls.map((imageUrl: string | undefined, index: number) => (
-            <img src={imageUrl} key={index} />
-          ))*/
 
   return (
     <PostWrapper id="post-wrapper">
@@ -76,7 +72,7 @@ const Post = ({ post }: PostType) => {
       <PostBuildSite>{post.buildSite}</PostBuildSite>
       <PostTimeCreated>{timeAndDateCreated}</PostTimeCreated>
       <PostReport>{post.report}</PostReport>
-      {post.imageUrls && <ImageCarousel imageUrlArray={post.imageUrls} />}
+      {post.imageNames && <ImageCarousel imageUrlArray={post.imageNames} />}
 
       <div className="flex justify-between w-full mt-4 mb-7">
         <EditButton onClick={() => toggle()}>Edit</EditButton>

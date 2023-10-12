@@ -61,7 +61,7 @@ export const EditPostModal = ({ show, post, close }: EditPostModal) => {
     };
 
     const response = await axios.post<unknown>(
-      `${process.env.REACT_APP_SERVER_URL}/posts/update/${post.id}`,
+      `${process.env.REACT_APP_SERVER_URL}posts/update/${post.id}`,
       data
     );
 
