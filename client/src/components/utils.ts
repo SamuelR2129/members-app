@@ -2,10 +2,6 @@ import { utcToZonedTime } from 'date-fns-tz';
 import { parseISO, format } from 'date-fns';
 import { PostState } from '../pages/Feed';
 
-export const pulsePostCardToggle = () => {
-  document.querySelector('.pulse')?.classList.toggle('animate-pulse');
-};
-
 export const filterTrimOrderPosts = (globalFeed: PostState[], selectedSite: string) => {
   const filteredPosts = globalFeed.filter((post) =>
     post.buildSite.toLowerCase().includes(selectedSite.toLowerCase())

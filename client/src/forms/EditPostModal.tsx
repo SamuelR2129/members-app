@@ -15,7 +15,6 @@ import {
 } from '../styles/editFormModal';
 import ReactDOM from 'react-dom';
 import { z } from 'zod';
-import { pulsePostCardToggle } from '../components/utils';
 
 type SetEditedValues = {
   report: string;
@@ -55,48 +54,55 @@ const isEditedPostValid = (unknownData: unknown): unknownData is EditedPostState
 export const EditPostModal = ({ show, post, close }: EditPostModal) => {
   const [globalFeed, setGlobalFeed] = useRecoilState(feedState);
   const [editedValues, setEditedValues] = useState<SetEditedValues>(post);
+  const [loading, setLoading] = useState(false);
 
   const handleFormSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    pulsePostCardToggle();
+    try {
+      event.preventDefault();
+      setLoading(true);
 
-    if (!editedValues || !editedValues.buildSite || !editedValues.report) {
-      console.error(
-        `Missing editedValues - buildSite: ${editedValues?.buildSite} report: ${editedValues?.report}`
+      if (!editedValues || !editedValues.buildSite || !editedValues.report) {
+        console.error(
+          `Missing editedValues - buildSite: ${editedValues?.buildSite} report: ${editedValues?.report}`
+        );
+        setLoading(false);
+        alert(`There was a problem updating your post, please fill out build site and the report.`);
+        return;
+      }
+
+      const data = {
+        report: editedValues.report,
+        buildSite: editedValues.buildSite
+      };
+
+      const response = await axios.put<EditedPostState>(
+        `${process.env.REACT_APP_API_GATEWAY_PROD}updatePost/${post.id}`,
+        JSON.stringify(data)
       );
-      alert(`There was a problem updating your post, please fill out build site and the report.`);
-      pulsePostCardToggle();
-      return;
-    }
 
-    const data = {
-      report: editedValues.report,
-      buildSite: editedValues.buildSite
-    };
+      if (!isEditedPostValid(response.data)) {
+        setLoading(false);
+        alert(`There was a problem updating your post`);
+        return;
+      }
 
-    const response = await axios.post<EditedPostState>(
-      `${process.env.REACT_APP_SERVER_URL}updatePost/${post.id}`,
-      data
-    );
+      const feedWithEditedPost = injectEditedPostIntoFeed(response.data, globalFeed);
 
-    if (!isEditedPostValid(response.data)) {
+      setGlobalFeed(feedWithEditedPost);
+      setLoading(false);
+      alert('Post was edited!');
+      close();
+    } catch (err) {
+      console.error('Update error: ', err);
+      setLoading(false);
       alert(`There was a problem updating your post`);
-      pulsePostCardToggle();
-      return;
     }
-
-    const feedWithEditedPost = injectEditedPostIntoFeed(response.data, globalFeed);
-
-    setGlobalFeed(feedWithEditedPost);
-    alert('Post was edited!');
-    pulsePostCardToggle();
-    close();
   };
 
   return ReactDOM.createPortal(
     <>
       {show ? (
-        <ModalWrapper onClick={() => close()} className="pulse">
+        <ModalWrapper onClick={() => close()} className={`${loading ? 'animate-pulse' : ''}`}>
           <ModalContent onClick={(e) => e.stopPropagation()}>
             <ModalForm onSubmit={handleFormSubmit}>
               <ModalLabel>

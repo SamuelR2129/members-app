@@ -1,6 +1,6 @@
 import { useRecoilState } from 'recoil';
 import { feedState } from '../atom/feedAtom';
-import { pulsePostCardToggle, restructureDateTime } from './utils';
+import { restructureDateTime } from './utils';
 import axios from 'axios';
 import {
   PostName,
@@ -41,18 +41,19 @@ const removeStatePostById = (feed: PostState[], _idToRemove: string): PostState[
 const Post = ({ post }: PostType) => {
   const [globalFeed, setGlobalFeed] = useRecoilState(feedState);
   const [modal, setModal] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const timeAndDateCreated = restructureDateTime(post.createdAt);
 
   const toggle = () => setModal(!modal);
 
   const deletePost = async (post: PostState) => {
-    pulsePostCardToggle();
+    setLoading(true);
 
     const response = await axios.post(`/posts/delete/${post.id}`, post);
 
     if (!response) {
-      pulsePostCardToggle();
+      setLoading(false);
 
       alert('There was an issue removing the post, try again!');
 
@@ -61,12 +62,12 @@ const Post = ({ post }: PostType) => {
 
     const newFeed = removeStatePostById(globalFeed, post.id);
     setGlobalFeed(newFeed);
-    pulsePostCardToggle();
+    setLoading(false);
     alert('Post was deleted!');
   };
 
   return (
-    <PostWrapper className="pulse">
+    <PostWrapper className={`${loading ? 'animate-pulse' : ''}`}>
       <PostName>{post.name}</PostName>
 
       <PostBuildSite>{post.buildSite}</PostBuildSite>

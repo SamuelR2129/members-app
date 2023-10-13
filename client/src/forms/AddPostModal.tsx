@@ -18,7 +18,6 @@ import axios from 'axios';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { PostState } from '../pages/Feed';
 import { z } from 'zod';
-import { pulsePostCardToggle } from '../components/utils';
 
 type FormProps = {
   show: boolean;
@@ -66,9 +65,9 @@ const isAddPostResponseValid = (unknownData: unknown): unknownData is PostState 
   return false;
 };
 
-const getImageNamesFromFormData = (images: FileList): string[] => {
+export const getImageNamesFromFormData = (images: FileList): string[] => {
   return [...images].map((image) => {
-    return image.name;
+    return image.name.replace(/ /g, '_');
   });
 };
 
@@ -90,11 +89,10 @@ const AddPostModal = (props: FormProps) => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     formState: { errors }
   } = useForm<AddPostModalData>();
+  const [loading, setLoading] = useState(false);
 
   const onSubmit: SubmitHandler<AddPostModalData> = async (data) => {
-    // eslint-disable-next-line no-debugger
-    debugger;
-    pulsePostCardToggle();
+    setLoading(true);
 
     try {
       const postData: PostData = {
@@ -108,13 +106,13 @@ const AddPostModal = (props: FormProps) => {
       if (data.images.length > 0) postData.imageNames = getImageNamesFromFormData(data.images);
 
       const response = await axios.post<AddPostResponse>(
-        `${process.env.REACT_APP_SERVER_URL}savePost`,
+        `${process.env.REACT_APP_API_GATEWAY_PROD}savePost`,
         JSON.stringify(postData)
       );
 
       if (!isAddPostResponseValid(response.data)) {
         alert('There has been an error submitting your post');
-        pulsePostCardToggle();
+        setLoading(false);
         return;
       }
 
@@ -129,20 +127,21 @@ const AddPostModal = (props: FormProps) => {
       //resets the form values
       reset();
 
-      pulsePostCardToggle();
+      setLoading(false);
 
       alert('Post was successful!');
 
       props.onClose();
     } catch (err) {
       console.error('System Error Submitting Post: ', err);
+      setLoading(false);
       alert('There has been an error submitting your post');
       setSubmitting(false);
     }
   };
 
   return createPortal(
-    <ModalWrapper onClick={() => props.onClose()} className="pulse">
+    <ModalWrapper onClick={() => props.onClose()} className={`${loading ? 'animate-pulse' : ''}`}>
       <ModalContent onClick={(e) => e.stopPropagation()}>
         <ModalHeaderFooter>
           <h2 className="m-0">Make a post</h2>

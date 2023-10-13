@@ -18,7 +18,7 @@ const PostStateSchema = z.object({
 
 const FeedSchema = z.object({
   LastEvaluatedKey: z.object({ id: z.string() }).optional(),
-  mappedPosts: PostStateSchema.array()
+  posts: PostStateSchema.array()
 });
 
 const FeedResponseSchema = z.object({ data: FeedSchema });
@@ -52,20 +52,20 @@ const Feed = (): JSX.Element => {
 
     const response = await axios<Feed>(getUrl);
 
-    if (!isFetchingFeedResponseValid(response)) {
-      console.error('An error occurred while fetching the feed:', response);
-      setError(true);
-    }
-
-    if (response.status === 204) {
+    if (!response.data.LastEvaluatedKey?.id && !response.data.posts) {
       setNoMorePosts(true);
       setIsFetching(false);
       setLoading(false);
       return;
     }
 
+    if (!isFetchingFeedResponseValid(response)) {
+      console.error('An error occurred while fetching the feed:', response);
+      setError(true);
+    }
+
     setLastEvaluatedKey(response.data.LastEvaluatedKey?.id);
-    setGlobalFeed((prevFeed) => [...prevFeed, ...response.data.mappedPosts]);
+    setGlobalFeed((prevFeed) => [...prevFeed, ...response.data.posts]);
     setIsFetching(false);
     setLoading(false);
   };
