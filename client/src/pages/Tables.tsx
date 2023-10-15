@@ -4,6 +4,7 @@ import useSWR from 'swr';
 
 export type CellData = {
   id: string;
+  postId: string;
   name: string;
   createdAt: Date;
   costs: number;

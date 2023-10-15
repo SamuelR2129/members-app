@@ -44,6 +44,7 @@ type PostData = {
 
 const NewPostSchema = z.object({
   id: z.string(),
+  postId: z.string(),
   name: z.string(),
   report: z.string(),
   createdAt: z.string(),

@@ -19,6 +19,7 @@ import { PostState } from '../pages/Feed';
 type PostType = {
   post: {
     id: string;
+    postId: string;
     name: string;
     report: string;
     buildSite: string;
@@ -29,12 +30,13 @@ type PostType = {
 
 export type EditFormValues = {
   id: string;
+  postId: string;
   report: string;
   buildSite: string;
 };
 
 const removeStatePostById = (feed: PostState[], _idToRemove: string): PostState[] => {
-  const newArray = feed.filter((post) => post.id !== _idToRemove);
+  const newArray = feed.filter((post) => post.postId !== _idToRemove);
   return newArray;
 };
 
@@ -50,7 +52,7 @@ const Post = ({ post }: PostType) => {
   const deletePost = async (post: PostState) => {
     setLoading(true);
 
-    const response = await axios.post(`/posts/delete/${post.id}`, post);
+    const response = await axios.post(`/posts/delete/${post.postId}`, post);
 
     if (!response) {
       setLoading(false);
@@ -60,7 +62,7 @@ const Post = ({ post }: PostType) => {
       throw new Error(`This is an HTTP error deleting your post: The status is ${response}`);
     }
 
-    const newFeed = removeStatePostById(globalFeed, post.id);
+    const newFeed = removeStatePostById(globalFeed, post.postId);
     setGlobalFeed(newFeed);
     setLoading(false);
     alert('Post was deleted!');

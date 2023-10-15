@@ -9,6 +9,7 @@ import { z } from 'zod';
 
 const PostStateSchema = z.object({
   id: z.string(),
+  postId: z.string(),
   name: z.string(),
   report: z.string(),
   createdAt: z.string(),
@@ -17,7 +18,7 @@ const PostStateSchema = z.object({
 });
 
 const FeedSchema = z.object({
-  LastEvaluatedKey: z.object({ id: z.string() }).optional(),
+  LastEvaluatedKey: z.object({ id: z.string(), createdAt: z.string() }).optional(),
   posts: PostStateSchema.array()
 });
 
@@ -52,11 +53,11 @@ const Feed = (): JSX.Element => {
 
     const response = await axios<Feed>(getUrl);
 
-    if (!response.data.LastEvaluatedKey?.id && !response.data.posts) {
+    if (!response.data.LastEvaluatedKey?.createdAt) {
       setNoMorePosts(true);
       setIsFetching(false);
       setLoading(false);
-      return;
+      if (!response.data.posts) return;
     }
 
     if (!isFetchingFeedResponseValid(response)) {
@@ -64,7 +65,7 @@ const Feed = (): JSX.Element => {
       setError(true);
     }
 
-    setLastEvaluatedKey(response.data.LastEvaluatedKey?.id);
+    setLastEvaluatedKey(response.data.LastEvaluatedKey?.createdAt);
     setGlobalFeed((prevFeed) => [...prevFeed, ...response.data.posts]);
     setIsFetching(false);
     setLoading(false);
@@ -128,7 +129,7 @@ const Feed = (): JSX.Element => {
         {!error ? (
           <>
             {selectedOptionPosts.map((post) => (
-              <Post key={post.id} post={post} />
+              <Post key={post.postId} post={post} />
             ))}
             {noMorePosts && <div>No more posts to load</div>}
             {loading && <div>Searching for posts...</div>}

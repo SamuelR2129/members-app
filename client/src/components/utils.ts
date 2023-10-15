@@ -8,7 +8,7 @@ export const filterTrimOrderPosts = (globalFeed: PostState[], selectedSite: stri
   );
 
   const removedDuplicatesFromPosts = filteredPosts.filter(
-    (post, index, self) => index === self.findIndex((o) => o.id === post.id)
+    (post, index, self) => index === self.findIndex((o) => o.postId === post.postId)
   );
 
   const newestPostsFirst = removedDuplicatesFromPosts.sort(

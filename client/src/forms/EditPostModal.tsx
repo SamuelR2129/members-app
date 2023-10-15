@@ -28,11 +28,12 @@ type EditPostModal = {
 };
 
 export const injectEditedPostIntoFeed = (editedPost: EditedPostState, globalFeed: PostState[]) => {
-  return globalFeed.map((post) => (post.id !== editedPost.id ? post : editedPost));
+  return globalFeed.map((post) => (post.postId !== editedPost.postId ? post : editedPost));
 };
 
 const PostStateSchema = z.object({
   id: z.string(),
+  postId: z.string(),
   buildSite: z.string(),
   createdAt: z.string(),
   name: z.string(),
@@ -76,7 +77,7 @@ export const EditPostModal = ({ show, post, close }: EditPostModal) => {
       };
 
       const response = await axios.put<EditedPostState>(
-        `${process.env.REACT_APP_API_GATEWAY_PROD}updatePost/${post.id}`,
+        `${process.env.REACT_APP_API_GATEWAY_PROD}updatePost/${post.postId}`,
         JSON.stringify(data)
       );
 
