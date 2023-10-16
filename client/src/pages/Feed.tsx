@@ -14,7 +14,8 @@ const PostStateSchema = z.object({
   report: z.string(),
   createdAt: z.string(),
   buildSite: z.string(),
-  imageNames: z.string().array().optional()
+  imageNames: z.string().array().optional(),
+  imageUrls: z.string().array().optional()
 });
 
 const FeedSchema = z.object({

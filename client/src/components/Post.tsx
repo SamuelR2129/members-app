@@ -25,6 +25,7 @@ type PostType = {
     buildSite: string;
     createdAt: string;
     imageNames?: string[];
+    imageUrls?: string[];
   };
 };
 
@@ -45,27 +46,37 @@ const Post = ({ post }: PostType) => {
   const [modal, setModal] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  console.log(post.imageUrls);
+
   const timeAndDateCreated = restructureDateTime(post.createdAt);
 
   const toggle = () => setModal(!modal);
 
   const deletePost = async (post: PostState) => {
-    setLoading(true);
+    try {
+      setLoading(true);
 
-    const response = await axios.post(`/posts/delete/${post.postId}`, post);
+      const response = await axios.delete(
+        `${process.env.REACT_APP_API_GATEWAY_PROD}deletePost/${post.postId}?createdAt=${post.createdAt}`
+      );
 
-    if (!response) {
+      if (!response) {
+        setLoading(false);
+
+        alert('There was an issue removing the post, try again!');
+
+        throw new Error(`This is an HTTP error deleting your post: The status is ${response}`);
+      }
+
+      const newFeed = removeStatePostById(globalFeed, post.postId);
+      setGlobalFeed(newFeed);
       setLoading(false);
-
+      alert('Post was deleted!');
+    } catch (err) {
+      console.error(err);
+      setLoading(false);
       alert('There was an issue removing the post, try again!');
-
-      throw new Error(`This is an HTTP error deleting your post: The status is ${response}`);
     }
-
-    const newFeed = removeStatePostById(globalFeed, post.postId);
-    setGlobalFeed(newFeed);
-    setLoading(false);
-    alert('Post was deleted!');
   };
 
   return (
@@ -75,7 +86,7 @@ const Post = ({ post }: PostType) => {
       <PostBuildSite>{post.buildSite}</PostBuildSite>
       <PostTimeCreated>{timeAndDateCreated}</PostTimeCreated>
       <PostReport>{post.report}</PostReport>
-      {post.imageNames && <ImageCarousel imageUrlArray={post.imageNames} />}
+      {post.imageUrls && <ImageCarousel imageUrlArray={post.imageUrls} />}
 
       <div className="flex justify-between w-full mt-4 mb-7">
         <EditButton onClick={() => toggle()}>Edit</EditButton>

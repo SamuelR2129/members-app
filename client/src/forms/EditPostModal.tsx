@@ -38,7 +38,8 @@ const PostStateSchema = z.object({
   createdAt: z.string(),
   name: z.string(),
   report: z.string(),
-  imageNames: z.string().array().optional()
+  imageNames: z.string().array().optional(),
+  imageUrls: z.string().array().optional()
 });
 
 export type EditedPostState = z.infer<typeof PostStateSchema>;

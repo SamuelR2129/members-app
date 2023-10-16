@@ -6,4 +6,5 @@ export type PostState = {
   createdAt: string;
   buildSite: string;
   imageNames?: string[];
+  imageUrls?: string[];
 };

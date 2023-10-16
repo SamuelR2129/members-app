@@ -40,6 +40,7 @@ type PostData = {
   report: string;
   buildSite: string;
   imageNames?: string[];
+  imageUrls?: string[];
 };
 
 const NewPostSchema = z.object({
@@ -49,7 +50,8 @@ const NewPostSchema = z.object({
   report: z.string(),
   createdAt: z.string(),
   buildSite: z.string(),
-  imageNames: z.string().array().optional()
+  imageNames: z.string().array().optional(),
+  imageUrls: z.string().array().optional()
 });
 
 const AddPostResponse = z.object({
